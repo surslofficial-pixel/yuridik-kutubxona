@@ -25,19 +25,24 @@ export function Layout() {
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
       {/* Navbar */}
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
-          <div className="flex items-center gap-2">
-            <Link to="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-              <div className="bg-[#1E3A8A] p-1.5 sm:p-2 rounded-xl shrink-0">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between relative gap-2 sm:gap-4">
+          <div className="flex items-center min-w-0 flex-1">
+            <Link to="/" className="flex items-center gap-2 md:gap-3 min-w-0" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="bg-[#1E3A8A] p-2 rounded-xl shrink-0">
                 <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <span className="font-bold text-sm sm:text-xl text-[#1E3A8A] leading-tight">
-                Surxondaryo yuridik<br className="sm:hidden" /> texnikumi
-              </span>
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-sm sm:text-lg lg:text-xl text-[#1E3A8A] leading-tight truncate">
+                  Surxondaryo yuridik
+                </span>
+                <span className="font-bold text-sm sm:text-lg lg:text-xl text-[#1E3A8A] leading-tight truncate">
+                  texnikumi
+                </span>
+              </div>
             </Link>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden lg:flex items-center gap-6">
             {navItems.map((item) => (
               <Link
                 key={item.name}
@@ -54,8 +59,8 @@ export function Layout() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
-            <div className="relative hidden sm:block">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="relative hidden lg:block">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               <input
                 type="search"
@@ -63,18 +68,21 @@ export function Layout() {
                 className="h-9 w-64 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-4 text-sm outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6] transition-all"
               />
             </div>
-            <Button variant="outline" size="icon" className="rounded-full md:hidden flex-shrink-0">
-              <Search className="h-4 w-4" />
-            </Button>
+
             <Link to="/admin" className="hidden sm:flex flex-shrink-0">
               <Button variant="default" className="rounded-full w-full">
                 <User className="mr-2 h-4 w-4" /> Admin
               </Button>
             </Link>
+
+            <Button variant="outline" size="icon" className="rounded-full lg:hidden flex-shrink-0 h-9 w-9">
+              <Search className="h-4 w-4" />
+            </Button>
+
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden flex-shrink-0 z-[60]"
+              className="lg:hidden flex-shrink-0 z-[60] h-9 w-9"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -89,7 +97,7 @@ export function Layout() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="absolute top-[65px] left-0 w-full bg-white border-b border-slate-200 shadow-lg md:hidden z-50 overflow-hidden"
+              className="absolute top-[65px] left-0 w-full bg-white border-b border-slate-200 shadow-lg lg:hidden z-50 overflow-hidden"
             >
               <div className="flex flex-col p-4 space-y-3">
                 {navItems.map((item) => (
