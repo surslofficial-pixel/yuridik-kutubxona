@@ -796,7 +796,7 @@ export function AdminDashboard() {
           <p className="text-sm text-slate-500">Admin huquqlari</p>
         </div>
 
-        <nav className="flex px-4 md:px-0 space-x-2 md:space-x-0 md:flex-col md:space-y-1 overflow-x-auto pb-4 md:pb-0 scrollbar-hide flex-1">
+        <nav className="flex px-4 md:px-0 space-x-2 md:space-x-0 md:flex-col md:space-y-1 overflow-x-auto pb-4 md:pb-0 scrollbar-hide flex-1 flex-nowrap">
           <Button
             variant={activeTab === "overview" ? "secondary" : "ghost"}
             className={`flex-shrink-0 md:w-full justify-start rounded-xl whitespace-nowrap ${activeTab === "overview" ? "bg-blue-50 text-blue-700 hover:bg-blue-100" : "text-slate-600"}`}
@@ -847,7 +847,7 @@ export function AdminDashboard() {
       <main className="flex-1 space-y-8 px-4 md:px-0">
         {/* Header Actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             {activeTab === "overview" && "Umumiy ko'rinish"}
             {activeTab === "books" && "Kitoblar boshqaruvi"}
             {activeTab === "categories" && "Kategoriyalar boshqaruvi"}
@@ -900,7 +900,7 @@ export function AdminDashboard() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh]"
+              className="bg-white rounded-2xl shadow-xl w-[95%] sm:w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh]"
             >
               <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center shrink-0">
                 <h2 className="text-xl font-bold text-slate-900">
@@ -1436,7 +1436,7 @@ export function AdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
           >
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <h2 className="text-xl font-bold text-slate-900">Talabalar boshqaruvi</h2>
               <Button
                 onClick={() => {
@@ -1815,16 +1815,16 @@ export function AdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
           >
             <Card className="border-slate-100 shadow-sm overflow-hidden">
-              <CardHeader className="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-row items-center justify-between">
+              <CardHeader className="border-b border-slate-100 bg-slate-50/50 p-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <CardTitle className="text-lg font-semibold text-slate-800">
                   Foydalanuvchilar ro'yxati
                 </CardTitle>
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                <div className="relative w-full sm:w-auto">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="search"
                     placeholder="Foydalanuvchi izlash..."
-                    className="h-9 w-48 sm:w-64 rounded-full border border-slate-200 bg-white pl-9 pr-4 text-sm outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6] transition-all"
+                    className="h-10 w-full sm:w-64 rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6] transition-all shadow-sm"
                   />
                 </div>
               </CardHeader>
@@ -1913,7 +1913,7 @@ export function AdminDashboard() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white rounded-2xl shadow-xl w-[95%] sm:w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center shrink-0">
                 <h2 className="text-xl font-bold text-slate-900">
@@ -1996,7 +1996,7 @@ export function AdminDashboard() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white rounded-2xl shadow-xl w-[95%] sm:w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center shrink-0">
                 <h2 className="text-xl font-bold text-slate-900">
@@ -2132,7 +2132,7 @@ export function AdminDashboard() {
                         >
                           <td className="px-6 py-4 font-medium text-slate-900">
                             <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-xl bg-gradient-to-br ${topic.color} text-white`}>
+                              <div className={`p-2 rounded-xl shrink-0 bg-gradient-to-br ${topic.color} text-white`}>
                                 {(() => {
                                   const Icon = IconMap[topic.iconName] || BookOpen;
                                   return <Icon className="h-4 w-4" />;
