@@ -70,21 +70,21 @@ export function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-wrap gap-4 pt-4"
+            className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4"
           >
-            <a href="https://sursl.uz/" target="_blank" rel="noopener noreferrer">
+            <a href="https://sursl.uz/" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="bg-white text-[#1E3A8A] hover:bg-blue-50 rounded-full px-8 font-semibold shadow-lg"
+                className="w-full sm:w-auto bg-white text-[#1E3A8A] hover:bg-blue-50 rounded-full px-8 font-semibold shadow-lg"
               >
                 Rasmiy veb-sayt
               </Button>
             </a>
-            <Link to="/ai-law">
+            <Link to="/ai-law" className="w-full sm:w-auto">
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm rounded-full px-8"
+                className="w-full sm:w-auto border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm rounded-full px-8"
               >
                 AI & Huquq bo'limi
               </Button>

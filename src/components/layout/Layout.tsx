@@ -27,15 +27,15 @@ export function Layout() {
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between relative gap-2 sm:gap-4">
           <div className="flex items-center min-w-0 flex-1">
-            <Link to="/" className="flex items-center gap-2 md:gap-3 min-w-0" onClick={() => setIsMobileMenuOpen(false)}>
+            <Link to="/" className="flex items-center gap-2 md:gap-3" onClick={() => setIsMobileMenuOpen(false)}>
               <div className="bg-[#1E3A8A] p-2 rounded-xl shrink-0">
                 <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-bold text-sm sm:text-lg lg:text-xl text-[#1E3A8A] leading-tight truncate">
+              <div className="flex flex-col">
+                <span className="font-bold text-[13px] sm:text-lg lg:text-xl text-[#1E3A8A] leading-tight break-words whitespace-normal">
                   Surxondaryo yuridik
                 </span>
-                <span className="font-bold text-sm sm:text-lg lg:text-xl text-[#1E3A8A] leading-tight truncate">
+                <span className="font-bold text-[13px] sm:text-lg lg:text-xl text-[#1E3A8A] leading-tight break-words whitespace-normal">
                   texnikumi
                 </span>
               </div>
