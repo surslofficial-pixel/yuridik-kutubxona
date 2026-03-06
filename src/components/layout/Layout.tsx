@@ -24,7 +24,7 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
       {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md">
+      <header className="sticky top-0 z-[100] w-full bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between relative gap-2 sm:gap-4">
           <div className="flex items-center min-w-0 flex-1">
             <Link to="/" className="flex items-center gap-2 md:gap-3" onClick={() => setIsMobileMenuOpen(false)}>
