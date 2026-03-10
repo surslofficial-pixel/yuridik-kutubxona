@@ -1819,7 +1819,27 @@ export function AdminDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
           >
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex items-start sm:items-center gap-4 shadow-sm relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700"></div>
+              <div className="bg-amber-100 p-2 sm:p-3 rounded-full shrink-0 relative z-10">
+                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
+              </div>
+              <div className="relative z-10">
+                <h3 className="text-amber-800 font-bold text-sm sm:text-base">Muhim eslatma!</h3>
+                <p className="text-amber-700/90 text-sm mt-1 sm:mt-1.5 leading-relaxed">
+                  Eski ma'lumotlardagi <code className="font-bold bg-amber-100/80 px-1.5 py-0.5 rounded text-amber-900">4-25-guruh</code> kabi tire bilan yozilgan guruh nomlarini o'zgartirish uchun,
+                  quyidagi ro'yxatdan talabani topib tahrirlash (✏️) tugmasini bosing va guruhni <code className="font-bold bg-amber-100/80 px-1.5 py-0.5 rounded text-amber-900">425</code> ko'rinishida saqlang.
+                </p>
+              </div>
+            </motion.div>
+
             <Card className="border-slate-100 shadow-sm overflow-hidden">
               <CardHeader className="border-b border-slate-100 bg-slate-50/50 p-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <CardTitle className="text-lg font-semibold text-slate-800">
