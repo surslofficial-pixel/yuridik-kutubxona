@@ -378,8 +378,8 @@ export function AdminDashboard() {
     setNewFirstName(user.firstName);
     setNewLastName(user.lastName);
     // Parse existing group name to pre-select bosqich and guruh
-    const bosqichMatch = user.groupName.match(/(\d+)-bosqich/);
-    const guruhMatch = user.groupName.match(/(\d+)-guruh/);
+    const bosqichMatch = user.groupName ? user.groupName.match(/(\d+)-bosqich/) : null;
+    const guruhMatch = user.groupName ? user.groupName.match(/([\d-]+)-guruh/) : null;
     setSelectedAdminBosqich(bosqichMatch ? bosqichMatch[1] : "");
     setSelectedAdminGuruh(guruhMatch ? guruhMatch[1] : "");
     setShowUserModal(true);
@@ -1828,19 +1828,6 @@ export function AdminDashboard() {
                   />
                 </div>
               </CardHeader>
-              <div className="bg-yellow-50 border-y border-yellow-200 p-4 sm:px-6 flex items-start gap-4 shadow-inner">
-                <div className="shrink-0 pt-0.5">
-                  <AlertCircle className="h-5 w-5 text-yellow-600" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-semibold text-yellow-800">Muhim eslatma: Ma'lumotlarni saqlash</h4>
-                  <p className="text-xs sm:text-sm text-yellow-700 leading-relaxed">
-                    Tizim tezkor ishlashini ta'minlash maqsadida, har <span className="font-bold">30 kunda</span> bir marta foydalanuvchilar statistikasini
-                    <span className="font-semibold mx-1 text-emerald-700">"Word hisobot"</span>
-                    tugmasi orqali yuklab oling va keyin eski ma'lumotlarni o'chirib tashlang.
-                  </p>
-                </div>
-              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
                   <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">

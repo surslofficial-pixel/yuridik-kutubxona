@@ -90,8 +90,8 @@ export function BookDetails() {
 
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 lg:gap-12">
         {/* Book Cover Sidebar */}
-        <div className="space-y-6 max-w-[280px] mx-auto md:max-w-none w-full">
-          <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-xl border border-slate-100 relative group w-full">
+        <div className="space-y-6">
+          <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-xl border border-slate-100 relative group">
             <img
               src={book.cover}
               alt={book.title}

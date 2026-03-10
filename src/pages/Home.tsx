@@ -20,17 +20,25 @@ export function Home() {
   // "Yangi qo'shilgan kitoblar" bo'limida 2026, 2025, 2024, 2023 yillari uchun anime kitoblarni ko'rgazmaga (topga) qo'yamiz
   const targetYears = [2026, 2025, 2024, 2023];
 
-  const recentBooks = targetYears.flatMap((year) => {
+  const recentBooks = targetYears.map((year) => {
     // Bazadan ushbu yilda nashr etilgan kitobni topamiz
     const yearBooks = books.filter(b => Number(b.year) === year || Number(b.published) === year);
     if (yearBooks.length > 0) {
-      return [yearBooks.sort((a, b) => {
+      return yearBooks.sort((a, b) => {
         const dateA = a.date ? new Date(a.date).getTime() : 0;
         const dateB = b.date ? new Date(b.date).getTime() : 0;
         return dateB - dateA;
-      })[0]];
+      })[0];
     }
-    return [];
+    // Agar hali bunday kitob qo'shilmagan bo'lsa, o'rniga vizual tarzda chiroyli turishi uchun "Showcase" (namunaviy kitob) qo'yamiz
+    return {
+      id: `showcase-${year}`,
+      title: "Yangi darslik ko'rgazmasi",
+      author: "Muallif qo'shilmagan",
+      category: "Maxsus fanlar",
+      cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=400&h=600",
+      year: year
+    };
   });
 
 
@@ -38,6 +46,7 @@ export function Home() {
     <div className="space-y-12">
       {/* Hero Section */}
       <section className="relative overflow-hidden rounded-2xl sm:rounded-[32px] bg-[#1E3A8A] px-4 py-10 sm:px-12 sm:py-24 lg:px-16 lg:py-32 text-white shadow-2xl">
+        <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/library/1920/1080')] opacity-10 mix-blend-overlay bg-cover bg-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A8A] to-[#1E3A8A]/50" />
 
         <div className="relative z-10 max-w-2xl space-y-6">
@@ -61,21 +70,21 @@ export function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4"
+            className="flex flex-wrap gap-4 pt-4"
           >
-            <a href="https://sursl.uz/" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+            <a href="https://sursl.uz/" target="_blank" rel="noopener noreferrer">
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-white text-[#1E3A8A] hover:bg-blue-50 rounded-full px-8 font-semibold shadow-lg"
+                className="bg-white text-[#1E3A8A] hover:bg-blue-50 rounded-full px-8 font-semibold shadow-lg"
               >
                 Rasmiy veb-sayt
               </Button>
             </a>
-            <Link to="/ai-law" className="w-full sm:w-auto">
+            <Link to="/ai-law">
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full sm:w-auto border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm rounded-full px-8"
+                className="border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm rounded-full px-8"
               >
                 AI & Huquq bo'limi
               </Button>
