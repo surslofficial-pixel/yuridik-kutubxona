@@ -206,9 +206,6 @@ export function AILawSection() {
             transition={{ delay: 0.2 }}
             className="flex flex-wrap gap-4 pt-4"
           >
-            <Button size="lg" variant="premium" className="rounded-full font-semibold px-8 shadow-lg shadow-purple-500/25">
-              Premium obuna bo'lish
-            </Button>
           </motion.div>
         </div>
       </section>
