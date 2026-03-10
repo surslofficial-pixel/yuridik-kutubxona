@@ -144,7 +144,8 @@ export function AdminDashboard() {
     addStudent,
     updateStudent,
     deleteStudent,
-    aiAccessLogs
+    aiAccessLogs,
+    activeReaders
   } = useBooks();
 
 
@@ -526,11 +527,20 @@ export function AdminDashboard() {
       }
     });
 
-    return Array.from(userMap.values()).map(user => ({
-      ...user,
-      readBooks: Array.from(user.readBooks.entries()).map(([title, count]) => ({ title, count }))
-    })).sort((a, b) => b.lastRead - a.lastRead);
-  }, [readingSessions, books]);
+    // Build a set of active reader keys for fast lookup
+    const activeKeys = new Set(
+      activeReaders.map(r => `${r.firstName}-${r.lastName}-${r.groupName}`.toLowerCase())
+    );
+
+    return Array.from(userMap.values()).map(user => {
+      const key = `${user.firstName}-${user.lastName}-${user.groupName}`.toLowerCase();
+      return {
+        ...user,
+        status: activeKeys.has(key) ? "Faol" : "Faol emas",
+        readBooks: Array.from(user.readBooks.entries()).map(([title, count]) => ({ title, count }))
+      };
+    }).sort((a, b) => b.lastRead - a.lastRead);
+  }, [readingSessions, books, activeReaders]);
 
   const handleDeleteUser = (user: any) => {
     if (window.confirm(`${user.name}ning barcha o'qish statistikasini o'chirmoqchimisiz?`)) {

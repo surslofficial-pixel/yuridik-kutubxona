@@ -37,6 +37,7 @@ export function ReaderModal({ bookId, onClose }: ReaderModalProps) {
         const groupName = `${selectedBosqich}-bosqich, ${finalGuruh} guruh`;
 
         addReadingSession({ firstName, lastName, groupName, bookId });
+        sessionStorage.setItem('currentReader', JSON.stringify({ firstName, lastName, groupName }));
         onClose();
         navigate(`/reader/${bookId}`);
     };
@@ -49,6 +50,7 @@ export function ReaderModal({ bookId, onClose }: ReaderModalProps) {
             : `Mehmon — ${guestOrigin}`;
 
         addReadingSession({ firstName: guestFirstName, lastName: guestLastName, groupName, bookId });
+        sessionStorage.setItem('currentReader', JSON.stringify({ firstName: guestFirstName, lastName: guestLastName, groupName }));
         onClose();
         navigate(`/reader/${bookId}`);
     };

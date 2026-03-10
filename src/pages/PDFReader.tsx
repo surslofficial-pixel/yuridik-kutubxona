@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBooks } from "@/context/BookContext";
 import { useBookmarks } from "@/hooks/useBookmarks";
@@ -20,10 +20,44 @@ export function PDFReader() {
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
 
-  const { books } = useBooks();
+  const { books, setActiveReader, removeActiveReader } = useBooks();
   const { toggleBookmark, isBookmarked } = useBookmarks();
+  const activeReaderIdRef = useRef<string>('');
 
   const foundBook = books.find((b) => b.id.toString() === id);
+
+  // Register active reader presence
+  useEffect(() => {
+    const readerData = sessionStorage.getItem('currentReader');
+    if (!readerData || !id) return;
+
+    try {
+      const { firstName, lastName, groupName } = JSON.parse(readerData);
+      setActiveReader({ firstName, lastName, groupName, bookId: id }).then((docId) => {
+        activeReaderIdRef.current = docId;
+      });
+    } catch (e) {
+      console.error('Error registering active reader:', e);
+    }
+
+    const handleBeforeUnload = () => {
+      if (activeReaderIdRef.current) {
+        // Use navigator.sendBeacon with fetch for reliability on tab close
+        const url = `https://firestore.googleapis.com/v1/projects/surxondaryoyuridikkutubhonasi/databases/(default)/documents/active_readers/${activeReaderIdRef.current}`;
+        fetch(url, { method: 'DELETE', keepalive: true }).catch(() => { });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (activeReaderIdRef.current) {
+        removeActiveReader(activeReaderIdRef.current);
+        activeReaderIdRef.current = '';
+      }
+    };
+  }, [id]);
 
   const book = {
     id: foundBook?.id || id,

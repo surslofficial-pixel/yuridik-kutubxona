@@ -122,6 +122,15 @@ export interface AiAccessLog {
     timestamp: number;
 }
 
+export interface ActiveReader {
+    id: string;
+    firstName: string;
+    lastName: string;
+    groupName: string;
+    bookId: string | number;
+    timestamp: number;
+}
+
 interface BookContextType {
     categories: Category[];
     books: Book[];
@@ -145,6 +154,9 @@ interface BookContextType {
     deleteStudent: (id: string) => void;
     aiAccessLogs: AiAccessLog[];
     addAiAccessLog: (log: Omit<AiAccessLog, 'id' | 'timestamp'>) => void;
+    activeReaders: ActiveReader[];
+    setActiveReader: (data: Omit<ActiveReader, 'id' | 'timestamp'>) => Promise<string>;
+    removeActiveReader: (id: string) => void;
 }
 
 const defaultCategories: Category[] = [
@@ -402,6 +414,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
     const [aiTopics, setAiTopics] = useState<AiTopic[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
     const [aiAccessLogs, setAiAccessLogs] = useState<AiAccessLog[]>([]);
+    const [activeReaders, setActiveReaders] = useState<ActiveReader[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Merge AI topics into categories dynamically
@@ -424,6 +437,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
         let unsubAiTopics: (() => void) | null = null;
         let unsubStudents: (() => void) | null = null;
         let unsubAiAccessLogs: (() => void) | null = null;
+        let unsubActiveReaders: (() => void) | null = null;
 
         const init = async () => {
             try {
@@ -515,6 +529,13 @@ export function BookProvider({ children }: { children: ReactNode }) {
                 console.error("Firebase: AI Access Logs listener error:", error);
             });
 
+            unsubActiveReaders = onSnapshot(collection(db, "active_readers"), (snapshot) => {
+                const readers = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ActiveReader));
+                setActiveReaders(readers);
+            }, (error) => {
+                console.error("Firebase: Active Readers listener error:", error);
+            });
+
             setIsLoading(false);
         };
 
@@ -527,6 +548,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
             unsubAiTopics?.();
             unsubStudents?.();
             unsubAiAccessLogs?.();
+            unsubActiveReaders?.();
         };
     }, []);
 
@@ -694,6 +716,29 @@ export function BookProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const setActiveReader = async (data: Omit<ActiveReader, 'id' | 'timestamp'>): Promise<string> => {
+        try {
+            const docRef = await addDoc(collection(db, "active_readers"), {
+                ...data,
+                timestamp: Date.now(),
+            });
+            return docRef.id;
+        } catch (e) {
+            console.error("Error setting active reader:", e);
+            return '';
+        }
+    };
+
+    const removeActiveReader = async (id: string) => {
+        try {
+            if (id) {
+                await deleteDoc(doc(db, "active_readers", id));
+            }
+        } catch (e) {
+            console.error("Error removing active reader:", e);
+        }
+    };
+
     return (
         <BookContext.Provider
             value={{
@@ -719,6 +764,9 @@ export function BookProvider({ children }: { children: ReactNode }) {
                 deleteStudent,
                 aiAccessLogs,
                 addAiAccessLog,
+                activeReaders,
+                setActiveReader,
+                removeActiveReader,
             }}
         >
             {children}
