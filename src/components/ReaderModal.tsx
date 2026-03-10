@@ -28,7 +28,7 @@ export function ReaderModal({ bookId, onClose }: ReaderModalProps) {
             finalGuruh = selectedGuruh;
         }
 
-        const groupName = `${selectedBosqich}-bosqich, ${finalGuruh}-guruh`;
+        const groupName = `${selectedBosqich}-bosqich, ${finalGuruh} guruh`;
 
         addReadingSession({
             firstName,

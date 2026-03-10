@@ -379,7 +379,7 @@ export function AdminDashboard() {
     setNewLastName(user.lastName);
     // Parse existing group name to pre-select bosqich and guruh
     const bosqichMatch = user.groupName ? user.groupName.match(/(\d+)-bosqich/) : null;
-    const guruhMatch = user.groupName ? user.groupName.match(/([\d-]+)-guruh/) : null;
+    const guruhMatch = user.groupName ? user.groupName.match(/([\d-]+)[- ]guruh/) : null;
     setSelectedAdminBosqich(bosqichMatch ? bosqichMatch[1] : "");
     setSelectedAdminGuruh(guruhMatch ? guruhMatch[1] : "");
     setShowUserModal(true);
@@ -395,7 +395,7 @@ export function AdminDashboard() {
       finalGuruh = selectedAdminGuruh;
     }
 
-    const newGroupName = `${selectedAdminBosqich}-bosqich, ${finalGuruh}-guruh`;
+    const newGroupName = `${selectedAdminBosqich}-bosqich, ${finalGuruh} guruh`;
     updateUserSessions(editingUserIdentity, {
       firstName: newFirstName,
       lastName: newLastName,

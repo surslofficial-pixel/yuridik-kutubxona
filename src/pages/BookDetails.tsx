@@ -67,7 +67,7 @@ export function BookDetails() {
       finalGuruh = selectedGuruh;
     }
 
-    const groupName = `${selectedBosqich}-bosqich, ${finalGuruh}-guruh`;
+    const groupName = `${selectedBosqich}-bosqich, ${finalGuruh} guruh`;
 
     if (book.id) {
       addReadingSession({
