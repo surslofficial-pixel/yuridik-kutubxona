@@ -20,42 +20,79 @@ export function PDFReader() {
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
 
-  const { books, setActiveReader, removeActiveReader } = useBooks();
+  const { books, setActiveReader, removeActiveReader, updateActiveReaderTimestamp } = useBooks();
   const { toggleBookmark, isBookmarked } = useBookmarks();
   const activeReaderIdRef = useRef<string>('');
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const foundBook = books.find((b) => b.id.toString() === id);
 
-  // Register active reader presence
+  // Register active reader presence with heartbeat
   useEffect(() => {
     const readerData = sessionStorage.getItem('currentReader');
     if (!readerData || !id) return;
 
+    let isMounted = true;
+
     try {
       const { firstName, lastName, groupName } = JSON.parse(readerData);
       setActiveReader({ firstName, lastName, groupName, bookId: id }).then((docId) => {
-        activeReaderIdRef.current = docId;
+        if (isMounted && docId) {
+          activeReaderIdRef.current = docId;
+          // Heartbeat: update timestamp every 2 minutes
+          heartbeatRef.current = setInterval(() => {
+            if (activeReaderIdRef.current) {
+              updateActiveReaderTimestamp(activeReaderIdRef.current);
+            }
+          }, 2 * 60 * 1000);
+        }
       });
     } catch (e) {
       console.error('Error registering active reader:', e);
     }
 
-    const handleBeforeUnload = () => {
+    const cleanupReader = () => {
       if (activeReaderIdRef.current) {
-        // Use navigator.sendBeacon with fetch for reliability on tab close
-        const url = `https://firestore.googleapis.com/v1/projects/surxondaryoyuridikkutubhonasi/databases/(default)/documents/active_readers/${activeReaderIdRef.current}`;
+        const docId = activeReaderIdRef.current;
+        activeReaderIdRef.current = '';
+        // Try Firestore SDK delete
+        removeActiveReader(docId);
+        // Also try REST API delete as backup for mobile
+        const url = `https://firestore.googleapis.com/v1/projects/surxondaryoyuridikkutubhonasi/databases/(default)/documents/active_readers/${docId}`;
         fetch(url, { method: 'DELETE', keepalive: true }).catch(() => { });
+      }
+      if (heartbeatRef.current) {
+        clearInterval(heartbeatRef.current);
+        heartbeatRef.current = null;
       }
     };
 
+    // Mobile: visibilitychange is more reliable than beforeunload
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        cleanupReader();
+      }
+    };
+
+    // pagehide is the most reliable event on mobile Safari
+    const handlePageHide = () => {
+      cleanupReader();
+    };
+
+    const handleBeforeUnload = () => {
+      cleanupReader();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      isMounted = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      if (activeReaderIdRef.current) {
-        removeActiveReader(activeReaderIdRef.current);
-        activeReaderIdRef.current = '';
-      }
+      cleanupReader();
     };
   }, [id]);
 

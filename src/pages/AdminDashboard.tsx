@@ -527,9 +527,12 @@ export function AdminDashboard() {
       }
     });
 
-    // Build a set of active reader keys for fast lookup
+    // Build a set of active reader keys for fast lookup, filtering out stale entries (>3 min)
+    const threeMinAgo = Date.now() - 3 * 60 * 1000;
     const activeKeys = new Set(
-      activeReaders.map(r => `${r.firstName}-${r.lastName}-${r.groupName}`.toLowerCase())
+      activeReaders
+        .filter(r => r.timestamp > threeMinAgo)
+        .map(r => `${r.firstName}-${r.lastName}-${r.groupName}`.toLowerCase())
     );
 
     return Array.from(userMap.values()).map(user => {

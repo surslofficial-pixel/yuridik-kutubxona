@@ -157,6 +157,7 @@ interface BookContextType {
     activeReaders: ActiveReader[];
     setActiveReader: (data: Omit<ActiveReader, 'id' | 'timestamp'>) => Promise<string>;
     removeActiveReader: (id: string) => void;
+    updateActiveReaderTimestamp: (id: string) => void;
 }
 
 const defaultCategories: Category[] = [
@@ -739,6 +740,29 @@ export function BookProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const updateActiveReaderTimestamp = async (id: string) => {
+        try {
+            if (id) {
+                await updateDoc(doc(db, "active_readers", id), { timestamp: Date.now() });
+            }
+        } catch (e) {
+            console.error("Error updating active reader timestamp:", e);
+        }
+    };
+
+    // Auto-clean stale active_readers (older than 5 minutes)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+            activeReaders.forEach(reader => {
+                if (reader.timestamp < fiveMinAgo) {
+                    deleteDoc(doc(db, "active_readers", reader.id)).catch(() => { });
+                }
+            });
+        }, 60 * 1000); // Check every minute
+        return () => clearInterval(interval);
+    }, [activeReaders]);
+
     return (
         <BookContext.Provider
             value={{
@@ -767,6 +791,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
                 activeReaders,
                 setActiveReader,
                 removeActiveReader,
+                updateActiveReaderTimestamp,
             }}
         >
             {children}
