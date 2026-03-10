@@ -265,7 +265,7 @@ export function AdminDashboard() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginUsername === "Yuridikkutubxona" && loginPassword === "Texnikumadmin") {
+    if (loginUsername.trim() === "Yuridikkutubxona" && loginPassword.trim() === "Texnikumadmin") {
       sessionStorage.setItem('syt-admin-auth', 'true');
       setIsAuthenticated(true);
       setLoginError("");
@@ -743,20 +743,13 @@ export function AdminDashboard() {
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <input
-                  type={showLogin ? "text" : "password"}
+                  type="text"
                   value={loginUsername}
                   onChange={(e) => setLoginUsername(e.target.value)}
-                  className="w-full pl-11 pr-12 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                   placeholder="Loginni kiriting"
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowLogin(!showLogin)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-                >
-                  {showLogin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
               </div>
             </div>
             <div className="space-y-2">
