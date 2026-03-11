@@ -277,7 +277,7 @@ export function Layout() {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[201] w-[90%] max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden"
             >
-              <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 text-white text-center relative">
+              <div className="bg-gradient-to-br from-red-500 to-rose-600 p-6 text-white text-center relative">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -290,13 +290,13 @@ export function Layout() {
                   <AlertTriangle className="h-8 w-8 text-white drop-shadow-md" />
                 </div>
                 <h3 className="text-2xl font-bold mb-2 drop-shadow-sm">Eslatma!</h3>
-                <p className="text-orange-50 text-base leading-relaxed drop-shadow-sm">
-                  Sayt test rejimda ishlamoqda (dev)!
+                <p className="text-red-50 text-base leading-relaxed drop-shadow-sm">
+                  Sayt test rejimda ishlamoqda!
                 </p>
               </div>
               <div className="p-5 bg-slate-50 flex justify-center">
                 <Button
-                  className="w-full sm:w-[80%] h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-base font-semibold shadow-lg shadow-slate-900/20 transition-all hover:-translate-y-0.5"
+                  className="w-full sm:w-[80%] h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white text-base font-semibold shadow-lg shadow-red-600/20 transition-all hover:-translate-y-0.5"
                   onClick={closeTestAlert}
                 >
                   Tushunarli
