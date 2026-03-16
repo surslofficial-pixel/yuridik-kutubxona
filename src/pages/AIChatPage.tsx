@@ -103,15 +103,15 @@ export function AIChatPage() {
                 <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
 
                 {/* Header */}
-                <div className="relative z-10 px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between border-b border-slate-100 bg-white/80 backdrop-blur-md">
-                    <div className="flex items-center gap-3 sm:gap-4 relative z-50">
+                <div className="relative z-10 px-3 sm:px-8 py-3 sm:py-5 flex items-center justify-between border-b border-slate-100 bg-white/80 backdrop-blur-md">
+                    <div className="flex items-center gap-2.5 sm:gap-4 relative z-50">
                         <button onClick={handleReset}
-                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center border border-slate-200 bg-white hover:bg-slate-50 transition-all text-slate-500 hover:text-slate-900 cursor-pointer relative z-50 shadow-sm">
-                            <ArrowLeft className="w-5 h-5" />
+                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg xs:rounded-xl flex items-center justify-center border border-slate-200 bg-white hover:bg-slate-50 transition-all text-slate-500 hover:text-slate-900 cursor-pointer relative z-50 shadow-sm">
+                            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
-                        <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+                        <div className="w-9 h-9 sm:w-14 sm:h-14 rounded-xl xs:rounded-2xl flex items-center justify-center relative overflow-hidden shrink-0"
                             style={{ background: 'linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%)' }}>
-                            <BookOpen className="w-5 h-5 sm:w-7 sm:h-7 text-white drop-shadow-sm" />
+                            <BookOpen className="w-4 h-4 sm:w-7 sm:h-7 text-white drop-shadow-sm" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent" />
                         </div>
                         <div>
@@ -161,9 +161,9 @@ export function AIChatPage() {
                                     <button
                                         key={idx}
                                         onClick={() => handleSendMessage(qp.prompt)}
-                                        className="group flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all duration-300 bg-white border border-slate-100 hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-0.5"
+                                        className="group flex items-center gap-3 xs:gap-4 px-3 xs:px-5 py-3 xs:py-4 rounded-xl xs:rounded-2xl text-left transition-all duration-300 bg-white border border-slate-100 hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-0.5"
                                     >
-                                        <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300">
+                                        <div className="w-10 h-10 xs:w-12 xs:h-12 rounded-lg xs:rounded-xl bg-slate-50 flex items-center justify-center text-xl xs:text-2xl group-hover:scale-110 transition-transform duration-300">
                                             {qp.icon}
                                         </div>
                                         <div className="flex-1 min-w-0">

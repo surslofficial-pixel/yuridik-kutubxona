@@ -51,16 +51,16 @@ export function Layout() {
       {/* Navbar */}
       <header className="sticky top-0 z-[100] w-full bg-white shadow-sm border-b border-slate-100">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between relative gap-2 sm:gap-4">
-          <div className="flex items-center min-w-0 flex-1 overflow-hidden">
-            <Link to="/" className="flex items-center gap-1.5 xs:gap-2 md:gap-3" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="flex items-center min-w-0 flex-1">
+            <Link to="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
               <div className="bg-[#1E3A8A] p-1.5 xs:p-2 rounded-lg xs:rounded-xl shrink-0">
                 <BookOpen className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div className="flex flex-col min-w-0 leading-none">
-                <span className="font-bold text-[10px] xs:text-[12px] sm:text-lg lg:text-xl text-[#1E3A8A] truncate max-w-[120px] xs:max-w-none">
+              <div className="flex flex-col min-w-0 leading-tight">
+                <span className="font-bold text-[12px] xs:text-[14px] sm:text-lg lg:text-xl text-[#1E3A8A] whitespace-nowrap overflow-hidden text-ellipsis">
                   Surxondaryo yuridik
                 </span>
-                <span className="font-bold text-[10px] xs:text-[12px] sm:text-lg lg:text-xl text-[#1E3A8A] truncate max-w-[120px] xs:max-w-none">
+                <span className="font-bold text-[12px] xs:text-[14px] sm:text-lg lg:text-xl text-[#1E3A8A] whitespace-nowrap overflow-hidden text-ellipsis">
                   texnikumi
                 </span>
               </div>
