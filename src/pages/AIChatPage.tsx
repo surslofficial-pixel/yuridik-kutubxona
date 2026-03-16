@@ -135,7 +135,7 @@ export function AIChatPage() {
                     style={{ scrollbarWidth: 'thin', scrollbarColor: '#E2E8F0 transparent' }}>
 
                     {chatMessages.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-center space-y-8 sm:space-y-10 px-4 pb-10">
+                        <div className="h-full flex flex-col items-center justify-center text-center space-y-8 sm:space-y-10 px-4 pt-10 sm:pt-0 pb-10">
                             {/* Hero Icon */}
                             <div className="relative">
                                 <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-[2.5rem] flex items-center justify-center relative overflow-hidden bg-white shadow-2xl shadow-emerald-500/5 border border-slate-100">
