@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useBooks, IconMap } from "@/context/BookContext";
+import { ReaderModal } from "@/components/ReaderModal";
 
 export function Home() {
   const { categories, books } = useBooks();
   const navigate = useNavigate();
+  const [readerBookId, setReaderBookId] = useState<string | number | null>(null);
 
   const mainCategories = categories.filter(c => c.group === 'maxsus');
   const umumtalimCategories = categories.filter(c => c.group === 'umumtalim');
@@ -15,6 +18,10 @@ export function Home() {
 
   const badiiyCategorySlugs = badiiyCategories.map(c => c.slug);
   const badiiyBooks = books.filter(book => badiiyCategorySlugs.includes(book.categorySlug)).slice(0, 4);
+
+  const audioCategories = categories.filter(c => c.group === 'audio');
+  const audioCategorySlugs = audioCategories.map(c => c.slug);
+  const audioBooks = books.filter(book => audioCategorySlugs.includes(book.categorySlug)).slice(0, 4);
 
   // Eng so'nggi qo'shilgan 4 ta kitobni olib kelamiz
   const recentBooks = books
@@ -72,6 +79,15 @@ export function Home() {
                 className="border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm rounded-full px-8"
               >
                 AI & Huquq bo'limi
+              </Button>
+            </Link>
+            <Link to="/ai-chat">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm rounded-full px-8"
+              >
+                AI Kutubxonachi
               </Button>
             </Link>
           </motion.div>
@@ -196,6 +212,42 @@ export function Home() {
         </section>
       )}
 
+      {/* Audio Kitoblar Category */}
+      {audioCategories.length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Audio Darslik</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+            {audioCategories.map((category, index) => (
+              <motion.div
+                key={category.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Link to={`/category/${category.slug}`}>
+                  <Card className="group cursor-pointer hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-slate-100 h-full">
+                    <CardContent className="flex flex-col items-center justify-center p-6 text-center space-y-4 h-full">
+                      <div
+                        className={`p-3 rounded-2xl ${category.color} group-hover:scale-110 transition-transform duration-300`}
+                      >
+                        {(() => {
+                          const IconComponent = IconMap[category.iconName] || BookOpen;
+                          return <IconComponent className="h-6 w-6" />;
+                        })()}
+                      </div>
+                      <span className="text-sm font-medium text-slate-700 group-hover:text-[#1E3A8A] transition-colors line-clamp-2">
+                        {category.name}
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Badiiy Kitoblar Section */}
       {badiiyBooks.length > 0 && (
@@ -220,6 +272,8 @@ export function Home() {
                 key={book.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
+                onClick={() => navigate(`/books/${book.id}`)}
+                className="cursor-pointer h-full"
               >
                 <Card className="overflow-hidden group hover:shadow-lg transition-all duration-300 border-slate-100 h-full flex flex-col">
                   <div className="aspect-[3/4] overflow-hidden relative shrink-0">
@@ -238,11 +292,73 @@ export function Home() {
                       {book.title}
                     </CardTitle>
                     <p className="text-sm text-slate-500 line-clamp-1">{book.author}</p>
-                    {(book.year || book.published) && (
+                    {book.year && (
                       <p className="text-xs text-slate-400 mt-1">
-                        Nashr yili: <span className="font-medium text-slate-600">{book.year || book.published}</span>
+                        Nashr yili: <span className="font-medium text-slate-600">{book.year}</span>
                       </p>
                     )}
+                  </CardHeader>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Audio Kitoblar Section */}
+      {audioBooks.length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+              🎵 Audio Darslik
+            </h2>
+            <Link to="/categories">
+              <Button
+                variant="ghost"
+                className="text-[#3B82F6] hover:text-[#1E3A8A]"
+              >
+                Barchasini ko'rish <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {audioBooks.map((book) => (
+              <motion.div
+                key={book.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={() => navigate(`/books/${book.id}`)}
+                className="cursor-pointer h-full"
+              >
+                <Card className="overflow-hidden group hover:shadow-lg transition-all duration-300 border-emerald-100 hover:border-emerald-300 h-full flex flex-col relative">
+                  <div className="absolute top-2 right-2 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full z-10 font-medium flex items-center gap-1 shadow-sm">
+                    ▶ Audio
+                  </div>
+                  <div className="aspect-[3/4] overflow-hidden relative shrink-0">
+                    <img
+                      src={book.cover}
+                      alt={book.title}
+                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
+                        <span className="text-emerald-600 ml-1 text-xl">▶</span>
+                      </div>
+                    </div>
+                  </div>
+                  <CardHeader className="p-4 space-y-1 flex-1">
+                    <div className="text-xs font-medium text-emerald-600 mb-1">
+                      {book.category}
+                    </div>
+                    <CardTitle className="text-base line-clamp-2 group-hover:text-emerald-700 transition-colors">
+                      {book.title}
+                    </CardTitle>
+                    <p className="text-sm text-slate-500 line-clamp-1">{book.author}</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      YouTube orqali tinglang
+                    </p>
                   </CardHeader>
                 </Card>
               </motion.div>
@@ -274,6 +390,8 @@ export function Home() {
                 key={book.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
+                onClick={() => navigate(`/books/${book.id}`)}
+                className="cursor-pointer h-full"
               >
                 <Card className="overflow-hidden group hover:shadow-lg transition-all duration-300 border-slate-100 h-full flex flex-col">
                   <div className="aspect-[3/4] overflow-hidden relative shrink-0">
@@ -292,9 +410,9 @@ export function Home() {
                       {book.title}
                     </CardTitle>
                     <p className="text-sm text-slate-500 line-clamp-1">{book.author}</p>
-                    {(book.year || book.published) && (
+                    {book.year && (
                       <p className="text-xs text-slate-400 mt-1">
-                        Nashr yili: <span className="font-medium text-slate-600">{book.year || book.published}</span>
+                        Nashr yili: <span className="font-medium text-slate-600">{book.year}</span>
                       </p>
                     )}
                   </CardHeader>
@@ -303,6 +421,10 @@ export function Home() {
             ))}
           </div>
         </section>
+      )}
+
+      {readerBookId && (
+        <ReaderModal bookId={readerBookId} onClose={() => setReaderBookId(null)} />
       )}
     </div>
   );

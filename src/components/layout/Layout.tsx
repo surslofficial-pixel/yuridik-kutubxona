@@ -22,14 +22,15 @@ export function Layout() {
   }
 
   const navItems = [
-    { name: "Bosh sahifa", href: "/", icon: Home },
-    { name: "Katalog", href: "/catalog", icon: Library },
-    { name: "Saqlanganlar", href: "/saved", icon: Bookmark },
-    { name: "AI & Huquq", href: "/ai-law", icon: Sparkles, premium: true },
+    { name: "Bosh sahifa", href: "/", icon: Home, iconColorHex: "#2563EB", textColorHex: "#1E40AF" }, // Blue
+    { name: "Katalog", href: "/catalog", icon: Library, iconColorHex: "#F97316", textColorHex: "#C2410C" }, // Orange (Malla)
+    { name: "AI & Huquq", href: "/ai-law", icon: BookOpen, iconColorHex: "#EF4444", textColorHex: "#B91C1C" }, // Red
+    { name: "AI Kutubxonachi", href: "/ai-chat", icon: Sparkles, premium: true },
+    { name: "Saqlanganlar", href: "/saved", icon: Bookmark, iconColorHex: "#8B5CF6", textColorHex: "#6D28D9" }, // Violet
   ]
 
   // Close mobile menu and search when route changes
-  useState(() => {
+  useEffect(() => {
     setIsMobileMenuOpen(false)
     setIsMobileSearchOpen(false)
   }, [location.pathname])
@@ -44,7 +45,9 @@ export function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
+    <div className={cn(
+      "min-h-screen flex flex-col font-sans bg-[#F8FAFC]"
+    )}>
       {/* Navbar */}
       <header className="sticky top-0 z-[100] w-full bg-white shadow-sm border-b border-slate-100">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between relative gap-2 sm:gap-4">
@@ -71,11 +74,15 @@ export function Layout() {
                 to={item.href}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-[#3B82F6] flex items-center gap-2",
-                  location.pathname === item.href ? "text-[#1E3A8A]" : "text-slate-600",
-                  item.premium && "text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600 font-bold"
+                  location.pathname === item.href && "text-[#1E3A8A]",
+                  item.premium && "text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-600 font-bold"
                 )}
+                style={!item.premium && location.pathname !== item.href ? { color: item.textColorHex } : {}}
               >
-                <item.icon className={cn("h-4 w-4", item.premium && "text-purple-500")} />
+                <item.icon
+                  className={cn("h-4 w-4", item.premium && "text-emerald-500")}
+                  style={!item.premium && location.pathname !== item.href ? { color: item.iconColorHex } : {}}
+                />
                 {item.name}
               </Link>
             ))}
@@ -171,7 +178,7 @@ export function Layout() {
                       location.pathname === item.href
                         ? "bg-blue-50 text-[#1E3A8A]"
                         : "text-slate-600 hover:bg-slate-50",
-                      item.premium && "bg-gradient-to-r from-purple-50 to-pink-50 text-indigo-700 font-semibold"
+                      item.premium && "bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 font-semibold"
                     )}
                   >
                     <div className={cn(
@@ -179,13 +186,12 @@ export function Layout() {
                       location.pathname === item.href ? "bg-white shadow-sm" : "bg-slate-100",
                       item.premium && "bg-white shadow-sm"
                     )}>
-                      <item.icon className={cn(
-                        "h-5 w-5",
-                        location.pathname === item.href ? "text-[#1E3A8A]" : "text-slate-500",
-                        item.premium && "text-purple-600"
-                      )} />
+                      <item.icon
+                        className={cn("h-5 w-5", location.pathname === item.href ? "text-[#1E3A8A]" : (item.premium && "text-emerald-600"))}
+                        style={!item.premium && location.pathname !== item.href ? { color: item.iconColorHex } : {}}
+                      />
                     </div>
-                    {item.name}
+                    <span style={!item.premium && location.pathname !== item.href ? { color: item.textColorHex } : {}}>{item.name}</span>
                   </Link>
                 ))}
 
@@ -204,7 +210,12 @@ export function Layout() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
+      <main className={cn(
+        "relative z-10",
+        location.pathname === '/ai-chat'
+          ? "flex-1 w-full"
+          : "flex-1 container mx-auto px-4 py-8"
+      )}>
         <Outlet />
       </main>
 
@@ -268,39 +279,53 @@ export function Layout() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200]"
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[200]"
               onClick={closeTestAlert}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[201] w-[90%] max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[201] w-[90%] max-w-md bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(30,58,138,0.3)] border border-white/40 overflow-hidden"
             >
-              <div className="bg-gradient-to-br from-red-500 to-rose-600 p-6 text-white text-center relative">
+              <div className="bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] p-8 text-white text-center relative overflow-hidden">
+                {/* Decorative background glow */}
+                <div className="absolute top-[-50px] left-[-50px] w-32 h-32 bg-white/10 blur-2xl rounded-full"></div>
+                <div className="absolute bottom-[-50px] right-[-50px] w-32 h-32 bg-blue-400/20 blur-2xl rounded-full"></div>
+
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-3 right-3 text-white/80 hover:text-white hover:bg-black/10 rounded-full h-8 w-8"
+                  className="absolute top-4 right-4 text-white/70 hover:text-white hover:bg-white/10 rounded-full h-9 w-9 transition-all"
                   onClick={closeTestAlert}
                 >
                   <X className="h-5 w-5" />
                 </Button>
-                <div className="mx-auto bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mb-4 backdrop-blur-md shadow-inner border border-white/20">
-                  <AlertTriangle className="h-8 w-8 text-white drop-shadow-md" />
+
+                <div className="mx-auto bg-white/10 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 backdrop-blur-xl shadow-inner border border-white/20 transform hover:rotate-6 transition-transform duration-500">
+                  <BookOpen className="h-10 w-10 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]" />
                 </div>
-                <h3 className="text-3xl sm:text-4xl font-extrabold mb-3 tracking-wide drop-shadow-md">Eslatma!</h3>
-                <p className="text-white text-lg sm:text-xl font-medium leading-relaxed drop-shadow-sm">
-                  Sayt test rejimda ishlamoqda!
+
+                <h3 className="text-3xl sm:text-4xl font-black mb-4 tracking-tight drop-shadow-lg">
+                  Eslatma!
+                </h3>
+
+                <p className="text-blue-50/90 text-base sm:text-lg font-medium leading-relaxed drop-shadow-sm max-w-[280px] mx-auto">
+                  Elektron kutubxona tizimi hozirda <span className="text-white font-bold underline decoration-blue-300/50 underline-offset-4">test rejimida</span> ishlamoqda!
                 </p>
               </div>
-              <div className="p-5 bg-slate-50 flex justify-center">
+
+              <div className="p-8 bg-white/40 backdrop-blur-xl flex flex-col items-center border-t border-white/20">
                 <Button
-                  className="w-full sm:w-[80%] h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white text-base font-semibold shadow-lg shadow-red-600/20 transition-all hover:-translate-y-0.5"
+                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] hover:from-[#1E40AF] hover:to-[#1D4ED8] text-white text-lg font-bold shadow-[0_10px_25px_rgba(30,58,138,0.25)] transition-all hover:-translate-y-1 hover:shadow-[0_15px_35px_rgba(30,58,138,0.3)] active:scale-[0.98]"
                   onClick={closeTestAlert}
                 >
-                  Kirish
+                  Tushunarli
                 </Button>
+
+                <p className="mt-4 text-[11px] text-[#1E3A8A]/60 font-medium tracking-wide">
+                  SURXONDARYO YURIDIK TEXNIKUMI
+                </p>
               </div>
             </motion.div>
           </>

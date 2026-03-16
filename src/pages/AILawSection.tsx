@@ -1,25 +1,23 @@
-import React, { useState, useRef, KeyboardEvent, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Sparkles, BrainCircuit, ShieldAlert, Scale, Database, Lock, ChevronRight, LockKeyhole, BookOpen, ArrowLeft, X, KeyRound, ExternalLink, Bookmark } from "lucide-react"
+import { BrainCircuit, ShieldAlert, Scale, Database, Lock, ChevronRight, BookOpen, ArrowLeft } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useBooks } from "@/context/BookContext"
-import { AiTopic } from "@/context/BookContext"
+import { useBooks, AiTopic } from "@/context/BookContext"
 import { ReaderModal } from "@/components/ReaderModal"
 
 const AiIconMap: Record<string, any> = {
   BrainCircuit,
   Scale,
   ShieldAlert,
-  Sparkles,
   Database,
   Lock,
   BookOpen,
 }
 
 export function AILawSection() {
-  const { aiTopics, books, students, addAiAccessLog } = useBooks();
+  const { aiTopics, books } = useBooks();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -45,8 +43,6 @@ export function AILawSection() {
     setReaderBookId(book.id);
   };
 
-
-
   const handleBackToTopics = () => {
     setActiveTopic(null);
     setSearchParams({});
@@ -64,7 +60,7 @@ export function AILawSection() {
     const IconComponent = AiIconMap[activeTopic.iconName] || BookOpen;
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-8 animate-in fade-in duration-500">
         {/* Back button + Topic Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -122,7 +118,6 @@ export function AILawSection() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
                     </div>
                     <CardContent className="p-4 space-y-2">
                       <h3 className="font-semibold text-slate-900 line-clamp-2 group-hover:text-purple-700 transition-colors">
@@ -167,7 +162,7 @@ export function AILawSection() {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 animate-in fade-in duration-500">
       {/* Premium Hero */}
       <section className="relative overflow-hidden rounded-2xl sm:rounded-[32px] bg-slate-950 px-4 py-10 sm:px-12 sm:py-24 lg:px-16 lg:py-32 text-white shadow-2xl">
         <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/ai-law/1920/1080')] opacity-20 mix-blend-overlay bg-cover bg-center" />
@@ -178,7 +173,6 @@ export function AILawSection() {
         <div className="absolute bottom-0 left-0 -ml-32 -mb-32 w-96 h-96 rounded-full bg-blue-600/20 blur-3xl animate-pulse delay-1000" />
 
         <div className="relative z-10 max-w-2xl space-y-6">
-
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -195,14 +189,6 @@ export function AILawSection() {
           >
             Kelajak huquqshunosligi. Sun'iy intellekt va raqamli texnologiyalarning huquqiy tartibga solinishi bo'yicha eng so'nggi materiallar va tadqiqotlar.
           </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap gap-4 pt-4"
-          >
-          </motion.div>
         </div>
       </section>
 
@@ -233,7 +219,6 @@ export function AILawSection() {
                     <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${topic.color} p-0.5 shadow-sm`}>
                       <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
                         <IconComponent className={`h-6 w-6 text-transparent bg-clip-text bg-gradient-to-br ${topic.color}`} style={{ color: "url(#gradient)" }} />
-                        {/* SVG Gradient definition for icons */}
                         <svg width="0" height="0">
                           <linearGradient id="gradient" x1="100%" y1="100%" x2="0%" y2="0%">
                             <stop stopColor="#6366f1" offset="0%" />
@@ -270,7 +255,6 @@ export function AILawSection() {
           })}
         </div>
       </section>
-
 
       {readerBookId && (
         <ReaderModal bookId={readerBookId} onClose={() => setReaderBookId(null)} />

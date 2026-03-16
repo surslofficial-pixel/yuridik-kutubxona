@@ -58,7 +58,15 @@ function extractDriveFileId(input: string): string | null {
   const folderMatch = trimmed.match(folderPattern);
   if (folderMatch) return folderMatch[1];
 
-  // Pattern 4: Raw file ID (only alphanumeric, hyphens, underscores, 10+ chars)
+  // Pattern 4: YouTube Full Link (youtube.com/watch?v=VIDEO_ID)
+  const ytMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (ytMatch) return ytMatch[1];
+
+  // Pattern 5: YouTube Short Link (youtu.be/VIDEO_ID)
+  const ytShortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (ytShortMatch) return ytShortMatch[1];
+
+  // Pattern 6: Raw file ID or YouTube Video ID (often 10+ chars)
   if (/^[a-zA-Z0-9_-]{10,}$/.test(trimmed)) return trimmed;
 
   return null;
@@ -277,12 +285,12 @@ export function AdminDashboard() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Obfuscated credential check using base64
-    // btoa("yuridikkutubxona") = "eXVyaWRpa2t1dHVieG9uYQ=="
-    // btoa("Texnikumadmin") = "VGV4bmlrdW1hZG1pbg=="
+    // btoa("admin") = "YWRtaW4="
+    // btoa("Kutubxona") = "S3V0dWJ4b25h"
     const enteredUserBase64 = btoa(loginUsername.trim().toLowerCase());
     const enteredPassBase64 = btoa(loginPassword.trim());
 
-    if (enteredUserBase64 === "eXVyaWRpa2t1dHVieG9uYQ==" && enteredPassBase64 === "VGV4bmlrdW1hZG1pbg==") {
+    if (enteredUserBase64 === "YWRtaW4=" && enteredPassBase64 === "S3V0dWJ4b25h") {
       // Store a disguised token instead of 'true'
       const disguisedToken = btoa(`auth-valid-${Date.now()}`);
       sessionStorage.setItem('_sys_auth_tk', disguisedToken);
@@ -307,18 +315,111 @@ export function AdminDashboard() {
   const [newFormat, setNewFormat] = useState("PDF");
   const [newLanguage, setNewLanguage] = useState("O'zbek");
   const [newYear, setNewYear] = useState("");
+  const [newDate, setNewDate] = useState("");
   const [newSize, setNewSize] = useState("");
   const [newSizeUnit, setNewSizeUnit] = useState("MB");
 
+  // YouTube auto-fill effect
+  React.useEffect(() => {
+    if (newCategory === "Audio Darslik" && newDriveLink) {
+      const ytId = extractDriveFileId(newDriveLink);
+      // Auto-fetch ONLY if it's exactly 11 chars (standard YouTube ID)
+      if (ytId && ytId.length === 11) {
+        fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${ytId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.title) {
+              setNewTitle(prev => prev || data.title);
+              setNewYear(prev => prev || new Date().getFullYear().toString()); // Avtomatik yil
+              setNewDate(prev => prev || new Date().toISOString().split('T')[0]); // Avtomatik sana
+            }
+            if (data.author_name) {
+              setNewAuthor(prev => prev || data.author_name);
+            }
+            if (data.thumbnail_url) {
+              setNewCover(prev => prev || data.thumbnail_url);
+            } else {
+              setNewCover(prev => prev || `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`);
+            }
+          })
+          .catch(err => console.error("YouTube malumotlarini olishda xatolik:", err));
+      }
+    }
+  }, [newDriveLink, newCategory]);
+
+
+  const [isUploading, setIsUploading] = useState(false);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewCover(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert("Iltimos, rasm formatidagi fayl yuklang!");
+      return;
     }
+
+    setIsUploading(true);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Max dimensions for book covers (kichik o'lcham = kichik fayl)
+        const MAX_WIDTH = 300;
+        const MAX_HEIGHT = 450;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Bosqichma-bosqich siqish — 500KB dan kichik bo'lguncha
+          let quality = 0.5;
+          let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+          // Agar hali ham katta bo'lsa, sifatni pasaytirish
+          while (dataUrl.length > 500_000 && quality > 0.1) {
+            quality -= 0.1;
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+
+          setNewCover(dataUrl);
+        } else {
+          // Fallback: original razmer kichik bo'lsa
+          setNewCover(reader.result as string);
+        }
+        setIsUploading(false);
+      };
+      img.onerror = () => {
+        alert('Rasmni yuklashda xatolik');
+        setIsUploading(false);
+      };
+      img.src = reader.result as string;
+    };
+    reader.onerror = () => {
+      alert('Faylni o\'qishda xatolik');
+      setIsUploading(false);
+    };
+    reader.readAsDataURL(file);
   };
 
 
@@ -327,7 +428,7 @@ export function AdminDashboard() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryIconName, setNewCategoryIconName] = useState("BookOpen");
   const [newCategoryColor, setNewCategoryColor] = useState("bg-blue-100 text-blue-600");
-  const [newCategoryGroup, setNewCategoryGroup] = useState<'maxsus' | 'umumtalim' | 'badiiy'>('maxsus');
+  const [newCategoryGroup, setNewCategoryGroup] = useState<'maxsus' | 'umumtalim' | 'badiiy' | 'audio' | 'ai'>('maxsus');
 
   const resetCategoryForm = () => {
     setNewCategoryName("");
@@ -343,6 +444,7 @@ export function AdminDashboard() {
     setNewCategoryName(category.name);
     setNewCategoryIconName(category.iconName);
     setNewCategoryColor(category.color);
+    // @ts-ignore
     setNewCategoryGroup(category.group || 'maxsus');
     setShowCategoryModal(true);
   };
@@ -431,6 +533,7 @@ export function AdminDashboard() {
     setNewFormat("PDF");
     setNewLanguage("O'zbek");
     setNewYear("");
+    setNewDate("");
     setNewSize("");
     setNewSizeUnit("MB");
     setEditingBookId(null);
@@ -446,6 +549,7 @@ export function AdminDashboard() {
     setNewFormat(book.format || "PDF");
     setNewLanguage(book.language || "O'zbek");
     setNewYear(book.year?.toString() || "");
+    setNewDate(book.date || "");
 
     // Parse size and unit
     const sizeMatch = book.size?.match(/([\d.,]+)\s*(MB|KB|B|Bayt|Bit)/i);
@@ -462,12 +566,14 @@ export function AdminDashboard() {
     setShowAddModal(true);
   };
 
-  const handleAddBook = () => {
+  const handleAddBook = async () => {
     if (!newTitle) return;
 
-    // Convert Category name to slug
+    // Build slug map dynamically using both categories and aiTopics 
+    // to support adding AI topic books
     const slugMap: Record<string, string> = {};
     categories.forEach(c => slugMap[c.name] = c.slug);
+    aiTopics.forEach(t => slugMap[t.title] = `ai-${t.id}`);
 
     const newBookCategorySlug = slugMap[newCategory] || "boshqa";
     const dateStr = new Date().toISOString().split('T')[0];
@@ -475,39 +581,43 @@ export function AdminDashboard() {
     const driveFileId = extractDriveFileId(newDriveLink);
     const defaultCover = "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=400&h=600";
 
-    if (editingBookId) {
-      updateBook(editingBookId, {
-        title: newTitle,
-        author: newAuthor,
-        category: newCategory,
-        categorySlug: newBookCategorySlug,
-        cover: newCover || defaultCover,
-        fileId: driveFileId || undefined,
-        format: newFormat,
-        language: newLanguage,
-        year: newYear ? parseInt(newYear) : undefined,
-        size: newSize ? `${newSize} ${newSizeUnit}` : undefined,
-      });
-    } else {
-      const newBook = {
-        id: Date.now().toString(),
-        title: newTitle,
-        author: newAuthor,
-        category: newCategory,
-        categorySlug: newBookCategorySlug,
-        cover: newCover || defaultCover,
-        date: dateStr,
-        status: "Faol",
-        fileId: driveFileId || undefined,
-        format: newFormat,
-        language: newLanguage,
-        year: newYear ? parseInt(newYear) : new Date().getFullYear(),
-        size: newSize ? `${newSize} ${newSizeUnit}` : undefined,
-      };
-      addBook(newBook);
+    try {
+      if (editingBookId) {
+        await updateBook(editingBookId, {
+          title: newTitle,
+          author: newAuthor,
+          category: newCategory,
+          categorySlug: newBookCategorySlug,
+          cover: newCover || defaultCover,
+          fileId: driveFileId || undefined,
+          format: newFormat,
+          language: newLanguage,
+          year: newYear ? parseInt(newYear) : undefined,
+          size: newSize ? `${newSize} ${newSizeUnit}` : undefined,
+        });
+      } else {
+        const newBook = {
+          id: Date.now().toString(),
+          title: newTitle,
+          author: newAuthor,
+          category: newCategory,
+          categorySlug: newBookCategorySlug,
+          cover: newCover || defaultCover,
+          date: newDate || dateStr,
+          status: "Faol",
+          fileId: driveFileId || undefined,
+          format: newFormat,
+          language: newLanguage,
+          year: newYear ? parseInt(newYear) : new Date().getFullYear(),
+          size: newSize ? `${newSize} ${newSizeUnit}` : undefined,
+        };
+        await addBook(newBook);
+      }
+      resetForm();
+    } catch (error: any) {
+      console.error("Kitobni saqlashda xatolik:", error);
+      alert("Xatolik: Kitobni saqlab bo'lmadi! " + (error?.message || ""));
     }
-
-    resetForm();
   };
 
   // Calculate Users Stats
@@ -954,30 +1064,7 @@ export function AdminDashboard() {
                 </Button>
               </div>
               <div className="p-6 space-y-4 overflow-y-auto">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Kitob nomi
-                  </label>
-                  <input
-                    type="text"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                    placeholder="Masalan: Fuqarolik huquqi"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Muallif
-                  </label>
-                  <input
-                    type="text"
-                    value={newAuthor}
-                    onChange={(e) => setNewAuthor(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                    placeholder="Masalan: H. Rahmonqulov"
-                  />
-                </div>
+                {/* Kategoriya tanlash — barcha rejimlar uchun */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">
                     Kategoriya
@@ -987,129 +1074,282 @@ export function AdminDashboard() {
                     onChange={(e) => setNewCategory(e.target.value)}
                     className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all bg-white"
                   >
-                    {categories.map(c => (
-                      <option key={c.slug} value={c.name}>{c.name}</option>
-                    ))}
+                    <optgroup label="Asosiy Kategoriyalar">
+                      {categories.map(c => (
+                        <option key={c.slug} value={c.name}>{c.name}</option>
+                      ))}
+                    </optgroup>
+                    {aiTopics.length > 0 && (
+                      <optgroup label="AI & Huquq Mavzulari">
+                        {aiTopics.map(t => (
+                          <option key={t.id} value={t.title}>{t.title}</option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Muqova rasmi
-                  </label>
-                  <div className="flex items-center gap-4">
-                    {newCover && (
-                      <img src={newCover} alt="Muqova" className="w-16 h-20 object-cover rounded-lg border border-slate-200 shadow-sm" />
+
+                {/* ═══════════════════════════════════════════════════
+                    🎧 AUDIO DARSLIK — maxsus dizayn
+                    ═══════════════════════════════════════════════════ */}
+                {newCategory === "Audio Darslik" ? (
+                  <>
+                    {/* YouTube havola — BIRINCHI */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                        <span className="text-lg">🔗</span> YouTube havola
+                      </label>
+                      <p className="text-xs text-slate-400">
+                        YouTube videoning havolasini yopishtiring — sarlavha, muallif va rasm avtomatik to'ldiriladi
+                      </p>
+                      <div className="relative">
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <input
+                          type="text"
+                          value={newDriveLink}
+                          onChange={(e) => setNewDriveLink(e.target.value)}
+                          className={`w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-all ${newDriveLink && extractDriveFileId(newDriveLink)
+                            ? 'border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 bg-green-50/50'
+                            : newDriveLink && !extractDriveFileId(newDriveLink)
+                              ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/50'
+                              : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                            }`}
+                          placeholder="https://youtu.be/... yoki https://www.youtube.com/watch?v=..."
+                        />
+                      </div>
+                      {newDriveLink && extractDriveFileId(newDriveLink) && (
+                        <div className="flex items-center gap-2 text-green-600 text-xs font-medium">
+                          <span className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center text-[10px]">✓</span>
+                          Video topildi!
+                        </div>
+                      )}
+                      {newDriveLink && !extractDriveFileId(newDriveLink) && (
+                        <div className="flex items-center gap-2 text-red-500 text-xs font-medium">
+                          <AlertCircle className="h-3.5 w-3.5" />
+                          Havola noto'g'ri. YouTube videoning havolasini kiriting.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* YouTube Preview */}
+                    {newDriveLink && extractDriveFileId(newDriveLink) && (
+                      <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${extractDriveFileId(newDriveLink)}`}
+                          className="w-full aspect-video"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title="YouTube Preview"
+                        />
+                      </div>
                     )}
-                    <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-slate-300 hover:border-blue-400 cursor-pointer transition-colors bg-slate-50 hover:bg-blue-50">
-                      <Upload className="h-5 w-5 text-slate-400" />
-                      <span className="text-sm text-slate-500">{newCover ? "Boshqa rasm tanlash" : "Rasm tanlash"}</span>
+
+                    {/* Auto-filled fields */}
+                    <div className="space-y-3 p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
+                      <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider flex items-center gap-1.5">
+                        🎵 Audio ma'lumotlari
+                        {newTitle && <span className="text-green-500 text-[10px]">• avtomatik to'ldirildi</span>}
+                      </p>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Audio nomi</label>
+                        <input
+                          type="text"
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all bg-white"
+                          placeholder="YouTube'dan avtomatik to'ldiriladi..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Kanal nomi (Muallif)</label>
+                        <input
+                          type="text"
+                          value={newAuthor}
+                          onChange={(e) => setNewAuthor(e.target.value)}
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all bg-white"
+                          placeholder="Avtomatik to'ldiriladi..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Nashr yili</label>
+                        <input
+                          type="number"
+                          value={newYear}
+                          onChange={(e) => setNewYear(e.target.value)}
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all bg-white"
+                          placeholder="Avtomatik..."
+                        />
+                      </div>
+                      {newCover && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-slate-700">Muqova rasmi</label>
+                          <img src={newCover} alt="Muqova" className="w-full max-w-[200px] rounded-lg border border-slate-200 shadow-sm" />
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* ═══════════════════════════════════════════════════
+                        📚 ODDIY KITOB — an'anaviy dizayn
+                        ═══════════════════════════════════════════════════ */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">
+                        Kitob nomi
+                      </label>
                       <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
+                        type="text"
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                        placeholder="Masalan: Fuqarolik huquqi"
                       />
-                    </label>
-                  </div>
-                </div>
-
-                {/* Google Drive Link */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    📎 Google Drive havola
-                  </label>
-                  <p className="text-xs text-slate-400">
-                    Google Drive dan faylning Share havolasini bu yerga yopishtiring
-                  </p>
-                  <div className="relative">
-                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <input
-                      type="text"
-                      value={newDriveLink}
-                      onChange={(e) => setNewDriveLink(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-all ${newDriveLink && extractDriveFileId(newDriveLink)
-                        ? 'border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 bg-green-50/50'
-                        : newDriveLink && !extractDriveFileId(newDriveLink)
-                          ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/50'
-                          : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                        }`}
-                      placeholder="https://drive.google.com/file/d/.../view"
-                    />
-                  </div>
-                  {newDriveLink && extractDriveFileId(newDriveLink) && (
-                    <div className="flex items-center gap-2 text-green-600 text-xs font-medium">
-                      <span className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center text-[10px]">✓</span>
-                      Fayl topildi! ID: <code className="bg-green-100 px-1.5 py-0.5 rounded text-[11px]">{extractDriveFileId(newDriveLink)}</code>
                     </div>
-                  )}
-                  {newDriveLink && !extractDriveFileId(newDriveLink) && (
-                    <div className="flex items-center gap-2 text-red-500 text-xs font-medium">
-                      <AlertCircle className="h-3.5 w-3.5" />
-                      Havola noto'g'ri. Google Drive share havolasini kiriting.
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">
+                        Muallif
+                      </label>
+                      <input
+                        type="text"
+                        value={newAuthor}
+                        onChange={(e) => setNewAuthor(e.target.value)}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                        placeholder="Masalan: H. Rahmonqulov"
+                      />
                     </div>
-                  )}
-                </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">
+                        Muqova rasmi
+                      </label>
+                      <div className="flex items-center gap-4">
+                        {newCover && (
+                          <img src={newCover} alt="Muqova" className="w-16 h-20 object-cover rounded-lg border border-slate-200 shadow-sm" />
+                        )}
+                        <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed transition-colors ${isUploading ? 'border-blue-400 bg-blue-50 cursor-wait' : 'border-slate-300 hover:border-blue-400 cursor-pointer bg-slate-50 hover:bg-blue-50'}`}>
+                          {isUploading ? (
+                            <>
+                              <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <span className="text-sm text-blue-600 font-medium">Yuklanmoqda...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="h-5 w-5 text-slate-400" />
+                              <span className="text-sm text-slate-500">{newCover ? "Boshqa rasm tanlash" : "Rasm tanlash"}</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            disabled={isUploading}
+                          />
+                        </label>
+                      </div>
+                    </div>
 
-                {/* Additional Details */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">
-                      Nashr yili
-                    </label>
-                    <input
-                      type="number"
-                      value={newYear}
-                      onChange={(e) => setNewYear(e.target.value)}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                      placeholder="Masalan: 2024"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">
-                      Fayl hajmi
-                    </label>
-                    <input
-                      type="text"
-                      value={newSize}
-                      onChange={(e) => setNewSize(e.target.value)}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                      placeholder="Masalan: 2.5"
-                    />
-                    <select
-                      value={newSizeUnit}
-                      onChange={(e) => setNewSizeUnit(e.target.value)}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all bg-white text-sm"
-                    >
-                      <option value="MB">MB</option>
-                      <option value="KB">KB</option>
-                      <option value="B">Bayt</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">
-                      Kitob formati
-                    </label>
-                    <input
-                      type="text"
-                      value={newFormat}
-                      onChange={(e) => setNewFormat(e.target.value)}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                      placeholder="Masalan: PDF, EPUB"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">
-                      Kitob tili
-                    </label>
-                    <input
-                      type="text"
-                      value={newLanguage}
-                      onChange={(e) => setNewLanguage(e.target.value)}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                      placeholder="Masalan: O'zbek, Rus"
-                    />
-                  </div>
-                </div>
+                    {/* Book Link (Google Drive) */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">
+                        📎 Google Drive havola
+                      </label>
+                      <p className="text-xs text-slate-400">
+                        Google Drive dan faylning Share havolasini bu yerga yopishtiring
+                      </p>
+                      <div className="relative">
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <input
+                          type="text"
+                          value={newDriveLink}
+                          onChange={(e) => setNewDriveLink(e.target.value)}
+                          className={`w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-all ${newDriveLink && extractDriveFileId(newDriveLink)
+                            ? 'border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 bg-green-50/50'
+                            : newDriveLink && !extractDriveFileId(newDriveLink)
+                              ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/50'
+                              : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                            }`}
+                          placeholder="https://drive.google.com/file/d/.../view"
+                        />
+                      </div>
+                      {newDriveLink && extractDriveFileId(newDriveLink) && (
+                        <div className="flex items-center gap-2 text-green-600 text-xs font-medium">
+                          <span className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center text-[10px]">✓</span>
+                          Fayl topildi! ID: <code className="bg-green-100 px-1.5 py-0.5 rounded text-[11px]">{extractDriveFileId(newDriveLink)}</code>
+                        </div>
+                      )}
+                      {newDriveLink && !extractDriveFileId(newDriveLink) && (
+                        <div className="flex items-center gap-2 text-red-500 text-xs font-medium">
+                          <AlertCircle className="h-3.5 w-3.5" />
+                          Havola noto'g'ri. Google Drive share havolasini kiriting.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Additional Details */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">
+                          Nashr yili
+                        </label>
+                        <input
+                          type="number"
+                          value={newYear}
+                          onChange={(e) => setNewYear(e.target.value)}
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                          placeholder="Masalan: 2024"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">
+                          Fayl hajmi
+                        </label>
+                        <input
+                          type="text"
+                          value={newSize}
+                          onChange={(e) => setNewSize(e.target.value)}
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                          placeholder="Masalan: 2.5"
+                        />
+                        <select
+                          value={newSizeUnit}
+                          onChange={(e) => setNewSizeUnit(e.target.value)}
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all bg-white text-sm"
+                        >
+                          <option value="MB">MB</option>
+                          <option value="KB">KB</option>
+                          <option value="B">Bayt</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">
+                          Kitob formati
+                        </label>
+                        <input
+                          type="text"
+                          value={newFormat}
+                          onChange={(e) => setNewFormat(e.target.value)}
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                          placeholder="Masalan: PDF, EPUB"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">
+                          Kitob tili
+                        </label>
+                        <input
+                          type="text"
+                          value={newLanguage}
+                          onChange={(e) => setNewLanguage(e.target.value)}
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                          placeholder="Masalan: O'zbek, Rus"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
                 <Button
@@ -1221,12 +1461,13 @@ export function AdminDashboard() {
                   </label>
                   <select
                     value={newCategoryGroup}
-                    onChange={(e) => setNewCategoryGroup(e.target.value as 'maxsus' | 'umumtalim' | 'badiiy')}
+                    onChange={(e) => setNewCategoryGroup(e.target.value as 'maxsus' | 'umumtalim' | 'badiiy' | 'audio')}
                     className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all bg-white"
                   >
                     <option value="maxsus">Maxsus fanlar darsliklari</option>
                     <option value="umumtalim">Umumta'lim fanlari</option>
                     <option value="badiiy">Badiiy adabiyotlar</option>
+                    <option value="audio">Audio Darslik</option>
                   </select>
                 </div>
               </div>
@@ -1851,9 +2092,89 @@ export function AdminDashboard() {
                 </table>
               </div>
             </Card>
+
+            {/* Audio kitoblar */}
+            <Card className="border-slate-100 shadow-sm overflow-hidden">
+              <CardHeader className="border-b border-emerald-100 bg-emerald-50/50 px-6 py-4">
+                <CardTitle className="text-lg font-semibold text-emerald-800">
+                  🎵 Audio Darslik
+                </CardTitle>
+              </CardHeader>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">
+                    <tr>
+                      <th className="px-6 py-4 font-medium w-2/5">Ikonka & Nom</th>
+                      <th className="px-6 py-4 font-medium w-1/5">Rang</th>
+                      <th className="px-6 py-4 font-medium w-1/5">Kitoblar</th>
+                      <th className="px-6 py-4 font-medium text-right w-1/5">Amallar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categories.filter(c => c.group === 'audio').map((cat) => {
+                      const IconComponent = IconMap[cat.iconName] || BookOpen;
+                      return (
+                        <tr
+                          key={cat.slug}
+                          className="bg-white border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
+                        >
+                          <td className="px-6 py-4 font-medium text-slate-900 flex items-center gap-3">
+                            <div className={`p-2 rounded-xl ${cat.color}`}>
+                              <IconComponent className="h-4 w-4" />
+                            </div>
+                            {cat.name}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className={`w-32 h-8 rounded-lg bg-gradient-to-r from-${cat.color.split('-')[1]}-500 to-${cat.color.split('-')[1]}-400 shadow-sm`} />
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-slate-700">{books.filter(b => b.categorySlug === cat.slug).length}</span>
+                              <button
+                                onClick={() => {
+                                  setNewCategory(cat.name);
+                                  setShowAddModal(true);
+                                }}
+                                className="p-1 hover:bg-emerald-50 rounded-full transition-colors group"
+                                title="Yangi audio kitob qo'shish"
+                              >
+                                <Plus className="h-4 w-4 text-emerald-400 group-hover:text-emerald-600" />
+                              </button>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-400 hover:text-blue-600"
+                                onClick={() => handleEditCategoryClick(cat)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-400 hover:text-red-600"
+                                onClick={() => {
+                                  if (window.confirm("Kategoriyani o'chirib tashlamoqchimisiz?")) {
+                                    deleteCategory(cat.slug);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
           </motion.div>
         )}
-
         {/* Users Tab Content */}
         {activeTab === "users" && (
           <motion.div

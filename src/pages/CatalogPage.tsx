@@ -113,7 +113,7 @@ export function CatalogPage() {
                                             className="w-full bg-[#3B82F6] hover:bg-[#1E3A8A] rounded-full"
                                             onClick={(e) => { e.stopPropagation(); setReaderBookId(book.id); }}
                                         >
-                                            O'qish
+                                            {book.categorySlug === 'audio-kitoblar' || book.category === 'Audio kitoblar' ? 'Eshitish' : "O'qish"}
                                         </Button>
                                     </div>
                                 </div>
@@ -125,9 +125,9 @@ export function CatalogPage() {
                                         {book.title}
                                     </CardTitle>
                                     <p className="text-sm text-slate-500 line-clamp-1">{book.author}</p>
-                                    {(book.year || book.published) && (
+                                    {book.year && (
                                         <p className="text-xs text-slate-400 mt-1">
-                                            Nashr yili: <span className="font-medium text-slate-600">{book.year || book.published}</span>
+                                            Nashr yili: <span className="font-medium text-slate-600">{book.year}</span>
                                         </p>
                                     )}
                                 </CardHeader>
@@ -154,40 +154,110 @@ export function CatalogPage() {
                 transition={{ delay: 0.15 }}
                 className="space-y-6 pt-8 border-t border-slate-100"
             >
-                <h2 className="text-2xl font-bold text-slate-900">Maxsus fanlar darsliklari</h2>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
-                    {categories.map((category, index) => {
-                        const IconComponent = IconMap[category.iconName] || BookOpen;
-                        const bookCount = books.filter(
-                            (b) => b.categorySlug === category.slug
-                        ).length;
-                        return (
-                            <motion.div
-                                key={category.slug}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: index * 0.03 }}
-                            >
-                                <Link to={`/category/${category.slug}`}>
-                                    <Card className="group cursor-pointer hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-slate-100 h-full">
-                                        <CardContent className="flex flex-col items-center justify-center p-6 text-center space-y-3 h-full">
-                                            <div
-                                                className={`p-3 rounded-2xl ${category.color} group-hover:scale-110 transition-transform duration-300`}
-                                            >
-                                                <IconComponent className="h-6 w-6" />
-                                            </div>
-                                            <span className="text-sm font-medium text-slate-700 group-hover:text-[#1E3A8A] transition-colors line-clamp-2">
-                                                {category.name}
-                                            </span>
-                                            <span className="text-xs text-slate-400">
-                                                {bookCount} ta kitob
-                                            </span>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
-                            </motion.div>
-                        );
-                    })}
+                <div className="space-y-8">
+                    {/* Maxsus fanlar darsliklari */}
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-4">Maxsus fanlar darsliklari</h2>
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+                            {categories.filter(c => c.group === 'maxsus').map((category, index) => {
+                                const IconComponent = IconMap[category.iconName] || BookOpen;
+                                const bookCount = books.filter((b) => b.categorySlug === category.slug).length;
+                                return (
+                                    <motion.div key={category.slug} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.03 }}>
+                                        <Link to={`/category/${category.slug}`}>
+                                            <Card className="group cursor-pointer hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-slate-100 h-full">
+                                                <CardContent className="flex flex-col items-center justify-center p-6 text-center space-y-3 h-full">
+                                                    <div className={`p-3 rounded-2xl ${category.color} group-hover:scale-110 transition-transform duration-300`}>
+                                                        <IconComponent className="h-6 w-6" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-slate-700 group-hover:text-[#1E3A8A] transition-colors line-clamp-2">{category.name}</span>
+                                                    <span className="text-xs text-slate-400">{bookCount} ta kitob</span>
+                                                </CardContent>
+                                            </Card>
+                                        </Link>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Umumta'lim fanlari */}
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-4">Umumta'lim fanlari</h2>
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+                            {categories.filter(c => c.group === 'umumtalim').map((category, index) => {
+                                const IconComponent = IconMap[category.iconName] || BookOpen;
+                                const bookCount = books.filter((b) => b.categorySlug === category.slug).length;
+                                return (
+                                    <motion.div key={category.slug} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.03 }}>
+                                        <Link to={`/category/${category.slug}`}>
+                                            <Card className="group cursor-pointer hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-slate-100 h-full">
+                                                <CardContent className="flex flex-col items-center justify-center p-6 text-center space-y-3 h-full">
+                                                    <div className={`p-3 rounded-2xl ${category.color} group-hover:scale-110 transition-transform duration-300`}>
+                                                        <IconComponent className="h-6 w-6" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-slate-700 group-hover:text-[#1E3A8A] transition-colors line-clamp-2">{category.name}</span>
+                                                    <span className="text-xs text-slate-400">{bookCount} ta kitob</span>
+                                                </CardContent>
+                                            </Card>
+                                        </Link>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Badiiy adabiyotlar */}
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-4">Badiiy adabiyotlar</h2>
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+                            {categories.filter(c => c.group === 'badiiy').map((category, index) => {
+                                const IconComponent = IconMap[category.iconName] || BookOpen;
+                                const bookCount = books.filter((b) => b.categorySlug === category.slug).length;
+                                return (
+                                    <motion.div key={category.slug} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.03 }}>
+                                        <Link to={`/category/${category.slug}`}>
+                                            <Card className="group cursor-pointer hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-slate-100 h-full">
+                                                <CardContent className="flex flex-col items-center justify-center p-6 text-center space-y-3 h-full">
+                                                    <div className={`p-3 rounded-2xl ${category.color} group-hover:scale-110 transition-transform duration-300`}>
+                                                        <IconComponent className="h-6 w-6" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-slate-700 group-hover:text-[#1E3A8A] transition-colors line-clamp-2">{category.name}</span>
+                                                    <span className="text-xs text-slate-400">{bookCount} ta kitob</span>
+                                                </CardContent>
+                                            </Card>
+                                        </Link>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Audio kitoblar */}
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-4">Audio kitoblar</h2>
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+                            {categories.filter(c => c.group === 'audio').map((category, index) => {
+                                const IconComponent = IconMap[category.iconName] || BookOpen;
+                                const bookCount = books.filter((b) => b.categorySlug === category.slug).length;
+                                return (
+                                    <motion.div key={category.slug} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.03 }}>
+                                        <Link to={`/category/${category.slug}`}>
+                                            <Card className="group cursor-pointer hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-slate-100 h-full">
+                                                <CardContent className="flex flex-col items-center justify-center p-6 text-center space-y-3 h-full">
+                                                    <div className={`p-3 rounded-2xl ${category.color} group-hover:scale-110 transition-transform duration-300`}>
+                                                        <IconComponent className="h-6 w-6" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-slate-700 group-hover:text-[#1E3A8A] transition-colors line-clamp-2">{category.name}</span>
+                                                    <span className="text-xs text-slate-400">{bookCount} ta kitob</span>
+                                                </CardContent>
+                                            </Card>
+                                        </Link>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             </motion.div>
 

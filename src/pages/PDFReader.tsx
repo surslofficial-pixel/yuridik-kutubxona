@@ -9,9 +9,14 @@ import {
   Moon,
   Sun,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  Play,
+  Pause,
+  FastForward,
+  Rewind
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ReactPlayer from 'react-player';
 
 
 
@@ -24,6 +29,24 @@ export function PDFReader() {
   const { toggleBookmark, isBookmarked } = useBookmarks();
   const activeReaderIdRef = useRef<string>('');
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Audio Player States
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playedSeconds, setPlayedSeconds] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const playerRef = useRef<any>(null);
+
+  const formatTime = (seconds: number) => {
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+  };
+
+  const handleSeek = (amount: number) => {
+    if (playerRef.current) {
+      playerRef.current.seekTo(playerRef.current.getCurrentTime() + amount, 'seconds');
+    }
+  };
 
   const foundBook = books.find((b) => b.id.toString() === id);
 
@@ -99,6 +122,8 @@ export function PDFReader() {
   const book = {
     id: foundBook?.id || id,
     title: foundBook?.title || "O'zbekiston Respublikasi Konstitutsiyasi",
+    author: foundBook?.author || "Noma'lum",
+    cover: foundBook?.cover || "https://images.unsplash.com/photo-1544947950-fa07a98d237f",
     drive_file_id: foundBook?.fileId || "",
     drive_url: foundBook?.driveUrl || "",
   };
@@ -128,10 +153,19 @@ export function PDFReader() {
         previewUrl = `https://drive.google.com/file/d/${idFromUrl}/preview`;
         driveViewUrl = `https://drive.google.com/file/d/${idFromUrl}/view?usp=sharing`;
       } else {
-        // Noma'lum, lekin baribir iframe orqali ochish
         previewUrl = rawUrl;
         driveViewUrl = rawUrl;
       }
+    } else if (rawUrl.includes("youtube.com") || rawUrl.includes("youtu.be")) {
+      // YouTube Embed Link
+      let videoId = "";
+      if (rawUrl.includes("youtu.be/")) {
+        videoId = rawUrl.split("youtu.be/")[1]?.split("?")[0];
+      } else if (rawUrl.includes("watch?v=")) {
+        videoId = rawUrl.split("watch?v=")[1]?.split("&")[0];
+      }
+      previewUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      driveViewUrl = rawUrl;
     } else {
       // Oddiy PDF yoki boshqa tashqi havola
       previewUrl = rawUrl;
@@ -141,19 +175,44 @@ export function PDFReader() {
 
   // Agar driveUrl bo'lmasa yoki noto'g'ri bo'lsa, fileId orqali urinib ko'ramiz
   if (!previewUrl) {
-    const fid = book.drive_file_id || "19klnuvu2l2GMOzs0I20qEG4YBzAnHZX";
-    isFolder = fid.length > 30 && !fid.includes("-");
+    const fid = book.drive_file_id?.trim() || "";
+    const isAudioBook = foundBook?.categorySlug === 'audio-kitoblar' || foundBook?.category === 'Audio Darslik';
 
-    previewUrl = isFolder
-      ? `https://drive.google.com/drive/folders/${fid}?usp=sharing&rm=minimal`
-      : `https://drive.google.com/file/d/${fid}/preview?rm=minimal`;
-
-    driveViewUrl = isFolder
-      ? `https://drive.google.com/drive/folders/${fid}?usp=sharing`
-      : `https://drive.google.com/file/d/${fid}/view?usp=sharing`;
+    // YouTube Video ID = exactly 11 characters
+    if (fid && fid.length === 11) {
+      previewUrl = `https://www.youtube.com/embed/${fid}?autoplay=1&rel=0`;
+      driveViewUrl = `https://www.youtube.com/watch?v=${fid}`;
+    } else if (fid) {
+      // Boshqa fayllar (misol uchun Google Drive ID)
+      isFolder = fid.length > 30 && !fid.includes("-");
+      if (isAudioBook) {
+        // Agar u Audio Kitob bo'lsa va Drive fayl bo'lsa, mp3 stream linkni beramiz
+        previewUrl = `https://docs.google.com/uc?export=download&id=${fid}`;
+        driveViewUrl = previewUrl;
+      } else {
+        previewUrl = isFolder
+          ? `https://drive.google.com/drive/folders/${fid}?usp=sharing&rm=minimal`
+          : `https://drive.google.com/file/d/${fid}/preview?rm=minimal`;
+        driveViewUrl = isFolder
+          ? `https://drive.google.com/drive/folders/${fid}?usp=sharing`
+          : `https://drive.google.com/file/d/${fid}/view?usp=sharing`;
+      }
+    }
   }
 
-  // Also try to append rm=minimal if previewUrl is already set
+  // Determine if this is a YouTube embed
+  const isYouTubeEmbed = previewUrl?.includes('youtube.com/embed');
+
+  // YouTube video ID ni oldindan hisoblash
+  const youtubeVideoId = book.drive_file_id?.includes('youtube.com')
+    ? (book.drive_file_id.match(/[?&]v=([^&]+)/)?.[1] || '')
+    : book.drive_file_id?.includes('youtu.be')
+      ? (book.drive_file_id.split('youtu.be/')[1]?.split('?')[0] || '')
+      : book.drive_file_id?.length === 11
+        ? book.drive_file_id.trim()
+        : (previewUrl?.split('embed/')[1]?.split('?')[0] || '');
+
+  // Also try to append rm=minimal if previewUrl is already set (Drive only)
   if (previewUrl && previewUrl.includes('drive.google.com')) {
     if (!previewUrl.includes('rm=minimal')) {
       previewUrl += previewUrl.includes('?') ? '&rm=minimal' : '?rm=minimal';
@@ -229,31 +288,181 @@ export function PDFReader() {
       <main className="flex-1 overflow-hidden p-0 sm:p-4 flex flex-col justify-center items-center gap-4">
 
 
-        <div
-          id="pdf-viewer-frame"
-          className={`w-full max-w-5xl flex-1 rounded-xl overflow-hidden shadow-2xl relative ${darkMode ? "shadow-black/50" : ""}`}
-        >
-          {/* Background loading spinner effect layer */}
-          <div className="absolute inset-0 flex items-center justify-center -z-10 bg-slate-100 dark:bg-slate-800">
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Yuklanmoqda...</p>
+        {isYouTubeEmbed ? (
+          <div className="w-full flex-1 max-w-sm sm:max-w-md bg-gradient-to-b from-slate-900 to-slate-950 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col items-center justify-center p-8 space-y-6 my-auto relative">
+            {/* Spinning Cover Art */}
+            <div className={`w-48 h-48 sm:w-64 sm:h-64 rounded-full overflow-hidden shadow-2xl relative border-[6px] border-slate-800 transition-all duration-300 ${isPlaying ? 'animate-[spin_15s_linear_infinite]' : ''}`}>
+              <img src={book.cover} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-12 h-12 bg-slate-900 rounded-full shadow-inner border-2 border-slate-800" />
+              </div>
             </div>
+
+            {/* Title and Audio status */}
+            <div className="text-center space-y-3 px-4 w-full">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-900/30 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+                <span className={`w-2 h-2 rounded-full bg-blue-500 ${isPlaying ? 'animate-pulse' : ''}`} />
+                {isPlaying ? "Audio efirda" : "To'xtatilgan"}
+              </div>
+              <h2 className="text-2xl font-bold text-white line-clamp-2 leading-snug">{book.title}</h2>
+              <p className="text-slate-400 text-sm font-medium">Kitob ovozlashtirilgan fonda ijro etilmoqda</p>
+
+              {/* Progress Bar */}
+              <div className="w-full flex items-center justify-between text-xs text-slate-500 font-medium px-2 pt-2">
+                <span>{formatTime(playedSeconds)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden relative mt-1 cursor-pointer"
+                onClick={(e) => {
+                  const bounds = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - bounds.left;
+                  const percent = x / bounds.width;
+                  const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
+                  if (ytIframe && duration > 0) {
+                    ytIframe.contentWindow?.postMessage(JSON.stringify({
+                      event: 'command', func: 'seekTo', args: [percent * duration, true]
+                    }), '*');
+                  }
+                }}>
+                <div className="h-full bg-blue-500 rounded-full transition-all duration-100" style={{ width: `${duration > 0 ? (playedSeconds / duration) * 100 : 0}%` }} />
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center justify-center gap-6 pt-4">
+                <button onClick={() => {
+                  const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
+                  if (ytIframe && playedSeconds > 15) {
+                    ytIframe.contentWindow?.postMessage(JSON.stringify({
+                      event: 'command', func: 'seekTo', args: [playedSeconds - 15, true]
+                    }), '*');
+                  }
+                }} className="p-3 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-full transition-all">
+                  <Rewind className="w-6 h-6" />
+                </button>
+                <button onClick={() => {
+                  const container = document.getElementById('yt-player-container');
+                  if (!container) return;
+
+                  if (!isPlaying && !container.querySelector('iframe')) {
+                    // Birinchi marta — iframe'ni yaratamiz autoplay=1 bilan
+                    const iframe = document.createElement('iframe');
+                    iframe.id = 'yt-audio-player';
+                    iframe.src = `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&playsinline=1&enablejsapi=1&rel=0&modestbranding=1&origin=${window.location.origin}`;
+                    iframe.width = '200';
+                    iframe.height = '200';
+                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                    iframe.style.border = 'none';
+                    iframe.setAttribute('allowfullscreen', '');
+                    container.appendChild(iframe);
+                    setIsPlaying(true);
+
+                    // Progress tracking
+                    const progressInterval = setInterval(() => {
+                      try {
+                        const ytFrame = document.getElementById('yt-audio-player') as HTMLIFrameElement;
+                        if (ytFrame?.contentWindow) {
+                          ytFrame.contentWindow.postMessage(JSON.stringify({
+                            event: 'listening', id: 1
+                          }), '*');
+                        }
+                      } catch (e) { }
+                    }, 1000);
+
+                    // Listen for YouTube messages
+                    const handleMessage = (event: MessageEvent) => {
+                      try {
+                        if (typeof event.data === 'string') {
+                          const data = JSON.parse(event.data);
+                          if (data.event === 'infoDelivery' && data.info) {
+                            if (typeof data.info.currentTime === 'number') {
+                              setPlayedSeconds(data.info.currentTime);
+                            }
+                            if (typeof data.info.duration === 'number' && data.info.duration > 0) {
+                              setDuration(data.info.duration);
+                            }
+                            if (data.info.playerState === 0) { // ENDED
+                              setIsPlaying(false);
+                            }
+                            if (data.info.playerState === 2) { // PAUSED
+                              setIsPlaying(false);
+                            }
+                            if (data.info.playerState === 1) { // PLAYING
+                              setIsPlaying(true);
+                            }
+                          }
+                        }
+                      } catch (e) { }
+                    };
+                    window.addEventListener('message', handleMessage);
+
+                    // Cleanup reference
+                    (container as any)._cleanup = () => {
+                      clearInterval(progressInterval);
+                      window.removeEventListener('message', handleMessage);
+                    };
+                  } else {
+                    // Play/Pause toggle
+                    const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
+                    if (ytIframe?.contentWindow) {
+                      if (isPlaying) {
+                        ytIframe.contentWindow.postMessage(JSON.stringify({
+                          event: 'command', func: 'pauseVideo', args: []
+                        }), '*');
+                        setIsPlaying(false);
+                      } else {
+                        ytIframe.contentWindow.postMessage(JSON.stringify({
+                          event: 'command', func: 'playVideo', args: []
+                        }), '*');
+                        setIsPlaying(true);
+                      }
+                    }
+                  }
+                }} className="p-4 bg-blue-500 hover:bg-blue-600 text-white shadow-xl shadow-blue-500/30 rounded-full transition-all hover:scale-105">
+                  {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current ml-1" />}
+                </button>
+                <button onClick={() => {
+                  const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
+                  if (ytIframe) {
+                    ytIframe.contentWindow?.postMessage(JSON.stringify({
+                      event: 'command', func: 'seekTo', args: [playedSeconds + 15, true]
+                    }), '*');
+                  }
+                }} className="p-3 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-full transition-all">
+                  <FastForward className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* YouTube player container - kichik, kartochka pastida, ko'rinmas lekin DOM da bor */}
+            <div id="yt-player-container" className="w-[200px] h-[200px] absolute bottom-0 right-0 overflow-hidden" style={{ opacity: 0.01, pointerEvents: 'none' }} />
           </div>
+        ) : (
+          <div
+            id="pdf-viewer-frame"
+            className={`w-full max-w-5xl flex-1 rounded-xl overflow-hidden shadow-2xl relative ${darkMode ? "shadow-black/50" : ""}`}
+          >
+            {/* Background loading spinner effect layer */}
+            <div className="absolute inset-0 flex items-center justify-center -z-10 bg-slate-100 dark:bg-slate-800">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Yuklanmoqda...</p>
+              </div>
+            </div>
 
-          <iframe
-            src={previewUrl}
-            width="100%"
-            height="100%"
-            className="border-none w-full h-full bg-white dark:bg-slate-950 relative z-10"
-            allow="autoplay"
-            title="Google Drive PDF Viewer"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-          />
+            <iframe
+              src={previewUrl}
+              width="100%"
+              height="100%"
+              className="border-none w-full h-full bg-white dark:bg-slate-950 relative z-10"
+              allow="autoplay"
+              title="Google Drive PDF Viewer"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+            />
 
-          {/* Overlays to prevent clicking external links in the iframe */}
-          <div className="absolute top-0 right-0 w-16 h-16 bg-transparent z-20" title="Yangi oynada ochish taqiqlangan"></div>
-        </div>
+            {/* Overlays to prevent clicking external links in the iframe */}
+            <div className="absolute top-0 right-0 w-16 h-16 bg-transparent z-20" title="Yangi oynada ochish taqiqlangan"></div>
+          </div>
+        )}
       </main>
 
 

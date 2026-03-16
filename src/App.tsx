@@ -11,6 +11,7 @@ import { BookProvider } from "./context/BookContext";
 // Lazy load all pages - they will be loaded only when navigated to
 const Home = lazy(() => import("./pages/Home").then(m => ({ default: m.Home })));
 const AILawSection = lazy(() => import("./pages/AILawSection").then(m => ({ default: m.AILawSection })));
+const AIChatPage = lazy(() => import("./pages/AIChatPage").then(m => ({ default: m.AIChatPage })));
 const BookDetails = lazy(() => import("./pages/BookDetails").then(m => ({ default: m.BookDetails })));
 const PDFReader = lazy(() => import("./pages/PDFReader").then(m => ({ default: m.PDFReader })));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard").then(m => ({ default: m.AdminDashboard })));
@@ -45,6 +46,7 @@ export default function App() {
               <Route path="categories" element={<CatalogPage />} />
               <Route path="category/:slug" element={<CategoryPage />} />
               <Route path="ai-law" element={<AILawSection />} />
+              <Route path="ai-chat" element={<AIChatPage />} />
               <Route path="books/:id" element={<BookDetails />} />
               <Route path="saved" element={<SavedBooks />} />
               <Route

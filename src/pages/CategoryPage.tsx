@@ -101,7 +101,7 @@ export function CategoryPage() {
                       className="w-full bg-[#3B82F6] hover:bg-[#1E3A8A] rounded-full"
                       onClick={(e) => { e.stopPropagation(); setReaderBookId(book.id); }}
                     >
-                      O'qish
+                      {book.categorySlug === 'audio-kitoblar' || book.category === 'Audio Darslik' ? 'Eshitish' : "O'qish"}
                     </Button>
                   </div>
                 </div>
@@ -117,9 +117,9 @@ export function CategoryPage() {
                   <p className="text-sm text-slate-500 line-clamp-1">
                     {book.author}
                   </p>
-                  {(book.year || book.published) && (
+                  {book.year && (
                     <p className="text-xs text-slate-400 mt-1">
-                      Nashr yili: <span className="font-medium text-slate-600">{book.year || book.published}</span>
+                      Nashr yili: <span className="font-medium text-slate-600">{book.year}</span>
                     </p>
                   )}
                 </CardHeader>

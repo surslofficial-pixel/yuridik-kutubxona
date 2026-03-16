@@ -12,7 +12,10 @@ interface ReaderModalProps {
 
 export function ReaderModal({ bookId, onClose }: ReaderModalProps) {
     const navigate = useNavigate();
-    const { addReadingSession } = useBooks();
+    const { addReadingSession, books } = useBooks();
+
+    const targetBook = books.find(b => b.id.toString() === bookId.toString());
+    const isAudio = targetBook?.categorySlug === 'audio-kitoblar' || targetBook?.format?.toLowerCase().includes('audio');
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -91,7 +94,9 @@ export function ReaderModal({ bookId, onClose }: ReaderModalProps) {
                                 </button>
                             </div>
                             <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
-                                <p className="text-sm text-slate-500">Kitobni o'qishni boshlashdan oldin, iltimos ma'lumotlaringizni kiriting.</p>
+                                <p className="text-sm text-slate-500">
+                                    {isAudio ? "Audioni eshitishni boshlashdan oldin, iltimos ma'lumotlaringizni kiriting." : "Kitobni o'qishni boshlashdan oldin, iltimos ma'lumotlaringizni kiriting."}
+                                </p>
                                 <div className="flex items-start gap-2.5 p-3 rounded-xl bg-blue-50 border border-blue-100">
                                     <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                                     <p className="text-xs sm:text-sm text-blue-700">
@@ -159,7 +164,7 @@ export function ReaderModal({ bookId, onClose }: ReaderModalProps) {
                                     disabled={!firstName || !lastName || !selectedBosqich || !selectedGuruh}
                                     className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 rounded-full text-white px-6 sm:px-8 h-11"
                                 >
-                                    O'qishni boshlash
+                                    {isAudio ? "Eshitishni boshlash" : "O'qishni boshlash"}
                                 </Button>
                             </div>
                         </form>
@@ -257,7 +262,7 @@ export function ReaderModal({ bookId, onClose }: ReaderModalProps) {
                                     disabled={!guestFirstName || !guestLastName || !guestOrigin}
                                     className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 rounded-full text-white px-6 sm:px-8 h-11"
                                 >
-                                    O'qishni boshlash
+                                    {isAudio ? "Eshitishni boshlash" : "O'qishni boshlash"}
                                 </Button>
                             </div>
                         </form>

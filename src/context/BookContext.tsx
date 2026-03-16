@@ -21,6 +21,7 @@ import {
     Sparkles,
     Database,
     Lock,
+    Headphones,
 } from "lucide-react";
 import { db } from "@/lib/firebase";
 import {
@@ -59,15 +60,15 @@ export const IconMap: Record<string, any> = {
     Sparkles,
     Database,
     Lock,
+    Headphones,
 };
 
-// Types
 export interface Category {
     name: string;
     iconName: string;
     color: string;
     slug: string;
-    group: 'maxsus' | 'umumtalim' | 'badiiy' | 'ai';
+    group: 'maxsus' | 'umumtalim' | 'badiiy' | 'ai' | 'audio';
 }
 
 export interface Book {
@@ -252,6 +253,13 @@ const defaultCategories: Category[] = [
         slug: "badiiy-adabiyot",
         group: "badiiy",
     },
+    {
+        name: "Audio Darslik",
+        iconName: "Headphones",
+        color: "bg-emerald-100 text-emerald-600",
+        slug: "audio-kitoblar",
+        group: "audio",
+    },
 ];
 
 const defaultAiTopics: AiTopic[] = [
@@ -316,7 +324,7 @@ const initialBooks: Book[] = [
     {
         id: 1,
         title: "O'zbekiston Respublikasi Konstitutsiyasi",
-        author: "Oliy Majlis",
+        author: "",
         category: "Konstitutsiyaviy huquq",
         categorySlug: "konstitutsiyaviy-huquq",
         cover:
@@ -397,6 +405,34 @@ const initialBooks: Book[] = [
         format: "PDF",
         language: "O'zbek",
     },
+    {
+        id: "a1",
+        title: "O'tkan kunlar (Audio kitob)",
+        author: "Abdulla Qodiriy",
+        category: "Audio Darslik",
+        categorySlug: "audio-kitoblar",
+        cover: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400&h=600",
+        year: 1926,
+        date: "2026-02-25",
+        status: "Faol",
+        format: "Audio/YouTube",
+        language: "O'zbek",
+        driveUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // Example placeholder, can be changed by admin
+    },
+    {
+        id: "a2",
+        title: "Jinoyat va Jazo (Audio kitob)",
+        author: "Fyodor Dostoyevskiy",
+        category: "Audio Darslik",
+        categorySlug: "audio-kitoblar",
+        cover: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400&h=600",
+        year: 1866,
+        date: "2026-02-26",
+        status: "Faol",
+        format: "Audio/YouTube",
+        language: "O'zbek",
+        driveUrl: "https://youtu.be/dQw4w9WgXcQ",
+    }
 ];
 
 // Helper: Remove undefined values from object (Firestore rejects undefined)
@@ -478,6 +514,23 @@ export function BookProvider({ children }: { children: ReactNode }) {
                     }
                     console.log("Firebase: AI topics seeding complete!");
                 }
+
+                // Seed Audio kitoblar category if it doesn't exist yet
+                const audioCatRef = doc(db, "categories", "audio-kitoblar");
+                const audioCatSnap = await getDoc(audioCatRef);
+                if (!audioCatSnap.exists()) {
+                    console.log("Firebase: Seeding Audio kitoblar category...");
+                    const audioCat = defaultCategories.find(c => c.slug === 'audio-kitoblar');
+                    if (audioCat) {
+                        await setDoc(audioCatRef, removeUndefined(audioCat));
+                    }
+                    // Seed sample audio books
+                    const audioBooks = initialBooks.filter(b => b.categorySlug === 'audio-kitoblar');
+                    for (const book of audioBooks) {
+                        await setDoc(doc(db, "books", book.id.toString()), removeUndefined(book));
+                    }
+                    console.log("Firebase: Audio Darslik seeding complete!");
+                }
             } catch (e) {
                 console.error("Firebase: Initialization error:", e);
             }
@@ -492,7 +545,15 @@ export function BookProvider({ children }: { children: ReactNode }) {
             });
 
             unsubBooks = onSnapshot(collection(db, "books"), (snapshot) => {
-                const bks = snapshot.docs.map(d => d.data() as Book);
+                const bks = snapshot.docs.map(d => {
+                    const data = d.data() as Book;
+                    // Auto-inject YouTube cover for Audio books across all components
+                    const isAudio = data.categorySlug === 'audio-kitoblar' || data.category === 'Audio Darslik';
+                    if (isAudio && data.fileId && data.fileId.length === 11) {
+                        data.cover = `https://img.youtube.com/vi/${data.fileId}/maxresdefault.jpg`;
+                    }
+                    return data;
+                });
                 setBooks(bks);
                 console.log("Firebase: Books loaded:", bks.length);
             }, (error) => {
@@ -588,8 +649,11 @@ export function BookProvider({ children }: { children: ReactNode }) {
                 date: book.date || new Date().toISOString().split('T')[0]
             });
             await setDoc(doc(db, "books", bookId), cleanData);
-        } catch (e) {
+            alert("Kitob muvaffaqiyatli saqlandi!");
+        } catch (e: any) {
             console.error("Error adding book:", e);
+            alert("Kitob saqlashda xatolik yuz berdi: " + (e.message || JSON.stringify(e)));
+            throw e;
         }
     };
 
