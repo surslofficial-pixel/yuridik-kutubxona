@@ -115,12 +115,12 @@ export function AIChatPage() {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent" />
                         </div>
                         <div>
-                            <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900">
+                            <h1 className="text-xl sm:text-3xl font-bold tracking-tight text-slate-900">
                                 AI Kutubxonachi
                             </h1>
                             <div className="flex items-center gap-1.5 mt-0.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <p className="text-[11px] sm:text-sm text-slate-500">
+                                <p className="text-xs sm:text-base font-medium text-slate-600">
                                     Online yordamchi
                                 </p>
                             </div>
@@ -149,9 +149,9 @@ export function AIChatPage() {
 
                             {/* Welcome Text */}
                             <div className="space-y-3 sm:space-y-4">
-                                <h2 className="text-xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Qanday yordam bera olaman?</h2>
-                                <p className="text-slate-500 text-xs sm:text-lg max-w-lg leading-relaxed px-4">
-                                    Surxondaryo yuridik texnikumi kutubxonasi bo'yicha <span className="text-emerald-600 font-semibold underline decoration-emerald-200">aqlli qidiruv</span> xizmati
+                                <h2 className="text-2xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">Qanday yordam bera olaman?</h2>
+                                <p className="text-slate-600 text-sm sm:text-xl max-w-lg leading-relaxed px-4 font-medium">
+                                    Surxondaryo yuridik texnikumi kutubxonasi bo'yicha <span className="text-emerald-600 font-bold underline decoration-emerald-300 decoration-2 underline-offset-4">aqlli qidiruv</span> xizmati
                                 </p>
                             </div>
 
