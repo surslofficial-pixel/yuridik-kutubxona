@@ -56,11 +56,11 @@ export function Layout() {
               <div className="bg-[#1E3A8A] p-2 rounded-xl shrink-0">
                 <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-[13px] sm:text-lg lg:text-xl text-[#1E3A8A] leading-tight break-words whitespace-normal">
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-[11px] xs:text-[13px] sm:text-lg lg:text-xl text-[#1E3A8A] leading-[1.1] truncate sm:whitespace-normal">
                   Surxondaryo yuridik
                 </span>
-                <span className="font-bold text-[13px] sm:text-lg lg:text-xl text-[#1E3A8A] leading-tight break-words whitespace-normal">
+                <span className="font-bold text-[11px] xs:text-[13px] sm:text-lg lg:text-xl text-[#1E3A8A] leading-[1.1] truncate sm:whitespace-normal">
                   texnikumi
                 </span>
               </div>

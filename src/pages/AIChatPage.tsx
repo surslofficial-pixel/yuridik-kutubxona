@@ -149,8 +149,8 @@ export function AIChatPage() {
 
                             {/* Welcome Text */}
                             <div className="space-y-3 sm:space-y-4">
-                                <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Qanday yordam bera olaman?</h2>
-                                <p className="text-slate-500 text-sm sm:text-lg max-w-lg leading-relaxed">
+                                <h2 className="text-xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Qanday yordam bera olaman?</h2>
+                                <p className="text-slate-500 text-xs sm:text-lg max-w-lg leading-relaxed px-4">
                                     Surxondaryo yuridik texnikumi kutubxonasi bo'yicha <span className="text-emerald-600 font-semibold underline decoration-emerald-200">aqlli qidiruv</span> xizmati
                                 </p>
                             </div>
@@ -234,7 +234,7 @@ export function AIChatPage() {
                                             handleSendMessage();
                                         }
                                     }}
-                                    placeholder="Kitob nomi, muallifi yoki fan nomi..."
+                                    placeholder={window.innerWidth < 640 ? "Kitob qidirish..." : "Kitob nomi, muallifi yoki fan nomi..."}
                                     className="w-full min-w-0 bg-transparent border-none px-3 py-2.5 sm:py-3.5 text-[14px] sm:text-[16px] text-slate-900 focus:outline-none focus:ring-0 placeholder:text-slate-400 font-medium"
                                 />
 
