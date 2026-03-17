@@ -1168,26 +1168,8 @@ export function AdminDashboard() {
                           placeholder="YouTube'dan avtomatik to'ldiriladi..."
                         />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Kanal nomi (Muallif)</label>
-                        <input
-                          type="text"
-                          value={newAuthor}
-                          onChange={(e) => setNewAuthor(e.target.value)}
-                          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all bg-white"
-                          placeholder="Avtomatik to'ldiriladi..."
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Nashr yili</label>
-                        <input
-                          type="number"
-                          value={newYear}
-                          onChange={(e) => setNewYear(e.target.value)}
-                          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all bg-white"
-                          placeholder="Avtomatik..."
-                        />
-                      </div>
+
+
                       {newCover && (
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-slate-700">Muqova rasmi</label>
