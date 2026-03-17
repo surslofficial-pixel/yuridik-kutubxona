@@ -1045,25 +1045,30 @@ export function AdminDashboard() {
 
         {/* Add Book Modal */}
         {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={resetForm} />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-2xl shadow-xl w-[95%] sm:w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh]"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="relative bg-white/95 backdrop-blur-2xl border border-white/60 rounded-[2rem] shadow-2xl shadow-blue-900/20 w-[95%] sm:w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh]"
             >
-              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center shrink-0">
-                <h2 className="text-xl font-bold text-slate-900">
+              {/* Soft top gradient */}
+              <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent pointer-events-none" />
+
+              <div className="px-6 py-5 border-b border-slate-100/60 flex justify-between items-center shrink-0 relative z-10">
+                <h2 className="text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 tracking-tight">
                   {editingBookId ? "Kitobni tahrirlash" : "Yangi kitob qo'shish"}
                 </h2>
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="rounded-full bg-slate-50/50 hover:bg-slate-100 transition-colors"
                   onClick={resetForm}
                 >
                   <Plus className="h-5 w-5 rotate-45 text-slate-500" />
                 </Button>
               </div>
-              <div className="p-6 space-y-4 overflow-y-auto">
+              <div className="p-6 space-y-5 overflow-y-auto relative z-10 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
                 {/* Kategoriya tanlash — barcha rejimlar uchun */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">
@@ -1351,17 +1356,17 @@ export function AdminDashboard() {
                   </>
                 )}
               </div>
-              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
+              <div className="px-6 py-5 border-t border-slate-100/60 bg-slate-50/50 flex justify-end gap-3 shrink-0 relative z-10 backdrop-blur-xl">
                 <Button
                   variant="outline"
-                  onClick={() => setShowAddModal(false)}
-                  className="rounded-xl"
+                  onClick={resetForm}
+                  className="rounded-xl border-slate-200/60 bg-white/50 hover:bg-slate-100/80 transition-colors text-slate-700"
                 >
                   Bekor qilish
                 </Button>
                 <Button
                   onClick={handleAddBook}
-                  className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 rounded-xl"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-blue-500/20 border-none transition-all hover:shadow-blue-500/30 hover:-translate-y-0.5 px-6 font-medium"
                 >
                   Saqlash
                 </Button>
