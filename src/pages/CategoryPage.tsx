@@ -114,13 +114,17 @@ export function CategoryPage() {
                       {book.title}
                     </CardTitle>
                   </div>
-                  <p className="text-sm text-slate-500 line-clamp-1">
-                    {book.author}
-                  </p>
-                  {book.year && (
-                    <p className="text-xs text-slate-400 mt-1">
-                      Nashr yili: <span className="font-medium text-slate-600">{book.year}</span>
-                    </p>
+                  {category.group !== 'audio' && (
+                    <>
+                      <p className="text-sm text-slate-500 line-clamp-1">
+                        {book.author}
+                      </p>
+                      {book.year && (
+                        <p className="text-xs text-slate-400 mt-1">
+                          Nashr yili: <span className="font-medium text-slate-600">{book.year}</span>
+                        </p>
+                      )}
+                    </>
                   )}
                 </CardHeader>
               </Card>
