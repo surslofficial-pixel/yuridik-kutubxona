@@ -10,7 +10,9 @@ jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+      
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -39,9 +41,13 @@ jobs:
         working-directory: ./kutubxona_app
         run: flutter build apk --release
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
         with:
-          name: Yuridik-Kutubxona-App
-          path: kutubxona_app/build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 30
+          files: kutubxona_app/build/app/outputs/flutter-apk/app-release.apk
+          tag_name: "latest"
+          name: "🔥 Eng So'nggi APK"
+          body: "Yuridik Kutubxona dasturining avtomatik yig'ilgan so'nggi va barqaror versiyasi."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
