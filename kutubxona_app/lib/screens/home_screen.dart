@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../models/book.dart';
 import '../models/category.dart';
 import '../services/firebase_service.dart';
@@ -10,96 +9,10 @@ import 'category_screen.dart';
 import 'catalog_screen.dart';
 import 'book_details_screen.dart';
 import 'admin/admin_login_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _checkForUpdates();
-  }
-
-  Future<void> _checkForUpdates() async {
-    try {
-      final packageInfo = await PackageInfo.fromPlatform();
-      final currentVersion = packageInfo.version;
-
-      final doc = await FirebaseFirestore.instance
-          .collection('settings')
-          .doc('app_info')
-          .get();
-
-      if (doc.exists &&
-          doc.data() != null &&
-          doc.data()!.containsKey('latestVersion')) {
-        final latestVersion = doc['latestVersion'] as String;
-        // Simple comparison assuming versions like "1.0.0"
-        if (latestVersion != currentVersion &&
-            latestVersion.compareTo(currentVersion) > 0) {
-          if (!mounted) return;
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: const Row(
-                children: [
-                  Icon(Icons.system_update, color: AppTheme.primaryBlue),
-                  SizedBox(width: 8),
-                  Text(
-                    'Yangilanish mavjud!',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              content: Text(
-                'Ilovaning yangi versiyasi ($latestVersion) chiqdi. Yangi imkoniyatlardan foydalanish uchun hoziroq yuklab oling.\n\nSizdagi versiya: $currentVersion',
-                style: const TextStyle(fontSize: 14, height: 1.4),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'KEYINROQ',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: () {
-                    final url = Uri.parse(
-                      'https://github.com/surslofficial-pixel/yuridik-kutubxona/releases/latest',
-                    );
-                    launchUrl(url, mode: LaunchMode.externalApplication);
-                  },
-                  child: const Text('YUKLAB OLISH'),
-                ),
-              ],
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      debugPrint('Update check failed: $e');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
