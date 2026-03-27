@@ -110,7 +110,7 @@ class _MainShellState extends State<MainShell> {
                   ),
                   onPressed: () {
                     final url = Uri.parse(
-                      'https://github.com/surslofficial-pixel/yuridik-kutubxona/releases/latest',
+                      'https://github.com/surslofficial-pixel/yuridik-kutubxona/releases/latest/download/app-release.apk',
                     );
                     launchUrl(url, mode: LaunchMode.externalApplication);
                   },
