@@ -84,82 +84,90 @@ class HomeScreen extends StatelessWidget {
               );
             }
 
-            return ListView(
-              padding: const EdgeInsets.only(bottom: 32),
-              children: [
-                // Hero Section
-                _buildHero(context),
-                const SizedBox(height: 24),
-
-                // Maxsus fanlar
-                if (mainCats.isNotEmpty) ...[
-                  _sectionHeader(
-                    context,
-                    'Maxsus fanlar darsliklari',
-                    onSeeAll: () => _openCatalog(context),
-                  ),
-                  _buildCategoryGrid(context, mainCats, books),
+            return RefreshIndicator(
+              color: AppTheme.primaryBlue,
+              backgroundColor: Colors.white,
+              onRefresh: () async {
+                // Firebase streams are real-time, so we just provide satisfying UI feedback
+                await Future.delayed(const Duration(milliseconds: 1200));
+              },
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 32),
+                children: [
+                  // Hero Section
+                  _buildHero(context),
                   const SizedBox(height: 24),
-                ],
 
-                // Umumta'lim
-                if (umumtalimCats.isNotEmpty) ...[
-                  _sectionHeader(context, "Umumta'lim fanlari"),
-                  _buildCategoryGrid(context, umumtalimCats, books),
-                  const SizedBox(height: 24),
-                ],
+                  // Maxsus fanlar
+                  if (mainCats.isNotEmpty) ...[
+                    _sectionHeader(
+                      context,
+                      'Maxsus fanlar darsliklari',
+                      onSeeAll: () => _openCatalog(context),
+                    ),
+                    _buildCategoryGrid(context, mainCats, books),
+                    const SizedBox(height: 24),
+                  ],
 
-                // Badiiy
-                if (badiiyCats.isNotEmpty) ...[
-                  _sectionHeader(context, 'Badiiy adabiyotlar'),
-                  _buildCategoryGrid(context, badiiyCats, books),
-                  const SizedBox(height: 24),
-                ],
+                  // Umumta'lim
+                  if (umumtalimCats.isNotEmpty) ...[
+                    _sectionHeader(context, "Umumta'lim fanlari"),
+                    _buildCategoryGrid(context, umumtalimCats, books),
+                    const SizedBox(height: 24),
+                  ],
 
-                // Audio
-                if (audioCats.isNotEmpty) ...[
-                  _sectionHeader(context, 'Audio Darslik'),
-                  _buildCategoryGrid(context, audioCats, books),
-                  const SizedBox(height: 24),
-                ],
+                  // Badiiy
+                  if (badiiyCats.isNotEmpty) ...[
+                    _sectionHeader(context, 'Badiiy adabiyotlar'),
+                    _buildCategoryGrid(context, badiiyCats, books),
+                    const SizedBox(height: 24),
+                  ],
 
-                // Badiiy kitoblar
-                if (badiiyBooks.isNotEmpty) ...[
-                  _sectionHeader(
-                    context,
-                    'Badiiy kitoblar',
-                    onSeeAll: () => _openCatalog(context),
-                  ),
-                  _buildBookGrid(context, badiiyBooks, categories),
-                  const SizedBox(height: 24),
-                ],
+                  // Audio
+                  if (audioCats.isNotEmpty) ...[
+                    _sectionHeader(context, 'Audio Darslik'),
+                    _buildCategoryGrid(context, audioCats, books),
+                    const SizedBox(height: 24),
+                  ],
 
-                // Audio kitoblar
-                if (audioBooks.isNotEmpty) ...[
-                  _sectionHeader(
-                    context,
-                    '🎵 Audio Darslik',
-                    onSeeAll: () => _openCatalog(context),
-                  ),
-                  _buildBookGrid(
-                    context,
-                    audioBooks,
-                    categories,
-                    isAudio: true,
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                  // Badiiy kitoblar
+                  if (badiiyBooks.isNotEmpty) ...[
+                    _sectionHeader(
+                      context,
+                      'Badiiy kitoblar',
+                      onSeeAll: () => _openCatalog(context),
+                    ),
+                    _buildBookGrid(context, badiiyBooks, categories),
+                    const SizedBox(height: 24),
+                  ],
 
-                // Yangi kitoblar
-                if (recentFour.isNotEmpty) ...[
-                  _sectionHeader(
-                    context,
-                    "Yangi qo'shilgan kitoblar",
-                    onSeeAll: () => _openCatalog(context),
-                  ),
-                  _buildBookGrid(context, recentFour, categories),
+                  // Audio kitoblar
+                  if (audioBooks.isNotEmpty) ...[
+                    _sectionHeader(
+                      context,
+                      '🎵 Audio Darslik',
+                      onSeeAll: () => _openCatalog(context),
+                    ),
+                    _buildBookGrid(
+                      context,
+                      audioBooks,
+                      categories,
+                      isAudio: true,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+
+                  // Yangi kitoblar
+                  if (recentFour.isNotEmpty) ...[
+                    _sectionHeader(
+                      context,
+                      "Yangi qo'shilgan kitoblar",
+                      onSeeAll: () => _openCatalog(context),
+                    ),
+                    _buildBookGrid(context, recentFour, categories),
+                  ],
                 ],
-              ],
+              ),
             );
           },
         );

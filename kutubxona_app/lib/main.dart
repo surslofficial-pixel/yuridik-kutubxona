@@ -11,6 +11,7 @@ import 'screens/catalog_screen.dart';
 import 'screens/ai_law_screen.dart';
 import 'screens/ai_chat_screen.dart';
 import 'screens/about_screen.dart';
+import 'widgets/connectivity_banner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,10 @@ class KutubxonaApp extends StatelessWidget {
       title: 'Surxondaryo Yuridik Texnikumi Kutubxonasi',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+        return ConnectivityBanner(child: child);
+      },
       home: const MainShell(),
     );
   }
