@@ -19,8 +19,8 @@ String _toDirectImageUrl(String url) {
     final match = pattern.firstMatch(url);
     if (match != null) {
       final fileId = match.group(1)!;
-      // Use Google's direct thumbnail endpoint
-      return 'https://drive.google.com/thumbnail?id=$fileId&sz=w400';
+      // 'uc?export=view&id=' is the most reliable endpoint for raw image bytes on mobile
+      return 'https://drive.google.com/uc?export=view&id=$fileId';
     }
   }
 
