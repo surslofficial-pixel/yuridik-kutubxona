@@ -11,6 +11,7 @@ import 'screens/catalog_screen.dart';
 import 'screens/ai_law_screen.dart';
 import 'screens/ai_chat_screen.dart';
 import 'screens/saved_books_screen.dart';
+import 'screens/about_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -192,8 +193,9 @@ class _MainShellState extends State<MainShell> {
     HomeScreen(),
     CatalogScreen(),
     AiLawScreen(),
-    AiChatScreen(),
-    SavedBooksScreen(),
+    const AiChatScreen(),
+    const SavedBooksScreen(),
+    const AboutScreen(),
   ];
 
   final _titles = const [
@@ -202,6 +204,7 @@ class _MainShellState extends State<MainShell> {
     'AI & Huquq',
     'AI Kutubxonachi',
     'Saqlanganlar',
+    'Dastur haqida',
   ];
 
   @override
@@ -262,6 +265,13 @@ class _MainShellState extends State<MainShell> {
                   Icons.bookmark,
                   'Saqlangan',
                   const Color(0xFF8B5CF6),
+                ),
+                _navItem(
+                  5,
+                  Icons.info_outline,
+                  Icons.info,
+                  'Haqida',
+                  const Color(0xFF6366F1),
                 ),
               ],
             ),
