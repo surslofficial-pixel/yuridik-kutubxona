@@ -114,18 +114,31 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                       background: Stack(
                         fit: StackFit.expand,
                         children: [
-                          CachedNetworkImage(
-                            imageUrl: book.cover,
-                            fit: BoxFit.cover,
-                            errorWidget: (_, _, _) => Container(
-                              color: Colors.grey[200],
-                              child: const Icon(
-                                Icons.menu_book,
-                                size: 60,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
+                          book.cover.startsWith('data:image')
+                              ? Image.memory(
+                                  UriData.parse(book.cover).contentAsBytes(),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(
+                                      Icons.broken_image,
+                                      size: 60,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                )
+                              : CachedNetworkImage(
+                                  imageUrl: book.cover,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, _, _) => Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(
+                                      Icons.broken_image,
+                                      size: 60,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
                           Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(

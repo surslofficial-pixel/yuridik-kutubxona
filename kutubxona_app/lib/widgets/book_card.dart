@@ -46,30 +46,45 @@ class BookCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: book.cover,
-                    fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(
-                      color: Colors.grey[100],
-                      child: const Center(
-                        child: Icon(
-                          Icons.menu_book_outlined,
-                          size: 32,
-                          color: Colors.grey,
+                  book.cover.startsWith('data:image')
+                      ? Image.memory(
+                          UriData.parse(book.cover).contentAsBytes(),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: Colors.grey[100],
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                size: 32,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        )
+                      : CachedNetworkImage(
+                          imageUrl: book.cover,
+                          fit: BoxFit.cover,
+                          placeholder: (_, _) => Container(
+                            color: Colors.grey[100],
+                            child: const Center(
+                              child: Icon(
+                                Icons.menu_book_outlined,
+                                size: 32,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                          errorWidget: (_, _, _) => Container(
+                            color: Colors.grey[100],
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                size: 32,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    errorWidget: (_, _, _) => Container(
-                      color: Colors.grey[100],
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          size: 32,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                  ),
                   if (isAudio)
                     Positioned(
                       top: 8,
