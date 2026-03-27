@@ -152,8 +152,22 @@ class _HomeScreenState extends State<HomeScreen> {
             final recentFour = recentBooks.take(4).toList();
 
             if (!catSnap.hasData && !bookSnap.hasData) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppTheme.primaryDark),
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    CircularProgressIndicator(color: AppTheme.primaryDark),
+                    SizedBox(height: 16),
+                    Text(
+                      'Iltimos kuting, yuklanmoqda...',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               );
             }
 
