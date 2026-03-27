@@ -10,7 +10,6 @@ import 'screens/home_screen.dart';
 import 'screens/catalog_screen.dart';
 import 'screens/ai_law_screen.dart';
 import 'screens/ai_chat_screen.dart';
-import 'screens/saved_books_screen.dart';
 import 'screens/about_screen.dart';
 
 void main() async {
@@ -194,7 +193,6 @@ class _MainShellState extends State<MainShell> {
     CatalogScreen(),
     AiLawScreen(),
     const AiChatScreen(),
-    const SavedBooksScreen(),
     const AboutScreen(),
   ];
 
@@ -203,7 +201,6 @@ class _MainShellState extends State<MainShell> {
     'Katalog',
     'AI & Huquq',
     'AI Kutubxonachi',
-    'Saqlanganlar',
     'Dastur haqida',
   ];
 
@@ -261,13 +258,6 @@ class _MainShellState extends State<MainShell> {
                 ),
                 _navItem(
                   4,
-                  Icons.bookmark_outline,
-                  Icons.bookmark,
-                  'Saqlangan',
-                  const Color(0xFF8B5CF6),
-                ),
-                _navItem(
-                  5,
                   Icons.info_outline,
                   Icons.info,
                   'Haqida',
