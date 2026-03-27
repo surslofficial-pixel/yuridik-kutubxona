@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 import 'theme/app_theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/catalog_screen.dart';
@@ -109,10 +111,8 @@ class _MainShellState extends State<MainShell> {
                     ),
                   ),
                   onPressed: () {
-                    final url = Uri.parse(
-                      'https://github.com/surslofficial-pixel/yuridik-kutubxona/releases/latest/download/app-release.apk',
-                    );
-                    launchUrl(url, mode: LaunchMode.externalApplication);
+                    Navigator.pop(context); // close the update prompt
+                    _downloadAndInstall(latestVersion);
                   },
                   child: const Text('YUKLAB OLISH'),
                 ),
@@ -123,6 +123,68 @@ class _MainShellState extends State<MainShell> {
       }
     } catch (e) {
       debugPrint('Update check failed: $e');
+    }
+  }
+
+  Future<void> _downloadAndInstall(String latestVersion) async {
+    final progressNotifier = ValueNotifier<double>(0.0);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Ilova yuklanmoqda...',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        content: ValueListenableBuilder<double>(
+          valueListenable: progressNotifier,
+          builder: (context, value, child) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LinearProgressIndicator(
+                  value: value,
+                  backgroundColor: Colors.grey[200],
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppTheme.primaryBlue,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${(value * 100).toStringAsFixed(1)} %',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+
+    try {
+      final dio = Dio();
+      final tempDir = await getTemporaryDirectory();
+      final filePath = '${tempDir.path}/app-release-$latestVersion.apk';
+
+      await dio.download(
+        'https://github.com/surslofficial-pixel/yuridik-kutubxona/releases/latest/download/app-release.apk',
+        filePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            progressNotifier.value = received / total;
+          }
+        },
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // close progress dialog
+      }
+      await OpenFilex.open(filePath);
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      debugPrint('Download error: $e');
     }
   }
 
