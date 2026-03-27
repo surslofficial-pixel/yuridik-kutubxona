@@ -118,14 +118,15 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                               ? Image.memory(
                                   UriData.parse(book.cover).contentAsBytes(),
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    color: Colors.grey[200],
-                                    child: const Icon(
-                                      Icons.broken_image,
-                                      size: 60,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        color: Colors.grey[200],
+                                        child: const Icon(
+                                          Icons.broken_image,
+                                          size: 60,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
                                 )
                               : CachedNetworkImage(
                                   imageUrl: book.cover,

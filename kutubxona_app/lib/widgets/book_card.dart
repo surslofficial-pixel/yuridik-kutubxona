@@ -50,16 +50,17 @@ class BookCard extends StatelessWidget {
                       ? Image.memory(
                           UriData.parse(book.cover).contentAsBytes(),
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            color: Colors.grey[100],
-                            child: const Center(
-                              child: Icon(
-                                Icons.broken_image_outlined,
-                                size: 32,
-                                color: Colors.grey,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: Colors.grey[100],
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    size: 32,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
                         )
                       : CachedNetworkImage(
                           imageUrl: book.cover,
