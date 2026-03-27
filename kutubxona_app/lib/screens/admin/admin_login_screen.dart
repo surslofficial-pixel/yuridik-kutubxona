@@ -73,12 +73,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Admin Panelga Kirish'),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
+
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
