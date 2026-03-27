@@ -19,8 +19,10 @@ String _toDirectImageUrl(String url) {
     final match = pattern.firstMatch(url);
     if (match != null) {
       final fileId = match.group(1)!;
-      // 'uc?export=view&id=' is the most reliable endpoint for raw image bytes on mobile
-      return 'https://drive.google.com/uc?export=view&id=$fileId';
+      // Using the thumbnail endpoint is much more reliable on mobile because
+      // it always returns an image block, whereas uc?export=view can return
+      // an HTML virus scan warning page for large files, which breaks the image parser.
+      return 'https://drive.google.com/thumbnail?id=$fileId&sz=w800';
     }
   }
 
