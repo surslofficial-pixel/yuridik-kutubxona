@@ -1,0 +1,48 @@
+name: kutubxona_app
+description: "Surxondaryo yuridik texnikumi kutubxonasi"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  firebase_core: ^3.13.0
+  cloud_firestore: ^5.6.7
+  cached_network_image: ^3.4.1
+  webview_flutter: ^4.12.0
+  youtube_player_flutter: ^9.1.1
+  shared_preferences: ^2.5.3
+  http: ^1.4.0
+  google_fonts: ^6.2.1
+  shimmer: ^3.0.0
+  url_launcher: ^6.3.1
+  image_picker: ^1.2.1
+  image: ^4.8.0
+  csv: ^8.0.0
+  path_provider: ^2.1.5
+  share_plus: ^12.0.1
+  webview_flutter_web: ^0.2.3+4
+  web: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.2
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon.png"
+  web:
+    generate: true
+    image_path: "assets/icon.png"
+    background_color: "#ffffff"
+    theme_color: "#ffffff"
+
+flutter:
+  uses-material-design: true
