@@ -197,8 +197,8 @@ class _MainShellState extends State<MainShell> {
     HomeScreen(),
     CatalogScreen(),
     AiLawScreen(),
-    const AiChatScreen(),
-    const AboutScreen(),
+    AiChatScreen(),
+    AboutScreen(),
   ];
 
   final _titles = const [
