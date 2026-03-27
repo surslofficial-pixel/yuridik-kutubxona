@@ -1,3 +1,32 @@
+/// Converts Google Drive sharing/view URLs to direct thumbnail URLs
+/// that work on native Android (Drive sharing links return HTML, not images)
+String _toDirectImageUrl(String url) {
+  if (url.isEmpty) return url;
+
+  // Already a direct image URL (not Google Drive)
+  if (!url.contains('drive.google.com') && !url.contains('docs.google.com')) {
+    return url;
+  }
+
+  // Extract file ID from various Drive URL formats
+  final patterns = [
+    RegExp(r'/d/([a-zA-Z0-9_-]+)'), // /d/FILE_ID/...
+    RegExp(r'id=([a-zA-Z0-9_-]+)'), // ?id=FILE_ID
+    RegExp(r'open\?id=([a-zA-Z0-9_-]+)'), // open?id=FILE_ID
+  ];
+
+  for (final pattern in patterns) {
+    final match = pattern.firstMatch(url);
+    if (match != null) {
+      final fileId = match.group(1)!;
+      // Use Google's direct thumbnail endpoint
+      return 'https://drive.google.com/thumbnail?id=$fileId&sz=w400';
+    }
+  }
+
+  return url;
+}
+
 class Book {
   final String id;
   final String title;
@@ -32,12 +61,15 @@ class Book {
   });
 
   factory Book.fromMap(Map<String, dynamic> data) {
-    final isAudio = data['categorySlug'] == 'audio-kitoblar' ||
+    final isAudio =
+        data['categorySlug'] == 'audio-kitoblar' ||
         data['category'] == 'Audio Darslik';
     final fid = data['fileId'] as String?;
     String cover = data['cover'] ?? '';
     if (isAudio && fid != null && fid.length == 11) {
       cover = 'https://img.youtube.com/vi/$fid/maxresdefault.jpg';
+    } else {
+      cover = _toDirectImageUrl(cover);
     }
     return Book(
       id: (data['id'] ?? '').toString(),
