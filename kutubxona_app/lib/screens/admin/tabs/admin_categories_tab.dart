@@ -122,7 +122,7 @@ class _AdminCategoriesTabState extends State<AdminCategoriesTab> {
                       ),
                       const SizedBox(height: 14),
                       DropdownButtonFormField<String>(
-                        initialValue: group,
+                        value: group,
                         items: ['maxsus', 'umumtalim', 'badiiy', 'audio', 'ai']
                             .map(
                               (g) => DropdownMenuItem(value: g, child: Text(g)),
