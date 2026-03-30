@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import '../../../models/book.dart';
@@ -667,13 +668,22 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                                       base64Decode(book.cover.split(',').last),
                                       fit: BoxFit.cover,
                                     )
-                                  : Image.network(
-                                      book.cover,
+                                  : CachedNetworkImage(
+                                      imageUrl: book.cover,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (c, e, s) => const Icon(
-                                        Icons.menu_book_rounded,
-                                        color: AppTheme.textTertiary,
+                                      placeholder: (c, url) => Container(
+                                        color: Colors.grey.shade100,
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
                                       ),
+                                      errorWidget: (c, url, error) =>
+                                          const Icon(
+                                            Icons.menu_book_rounded,
+                                            color: AppTheme.textTertiary,
+                                          ),
                                     ),
                             ),
                             const SizedBox(width: 12),

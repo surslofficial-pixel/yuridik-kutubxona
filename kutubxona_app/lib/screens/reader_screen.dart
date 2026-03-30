@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -334,13 +335,26 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            Image.network(
-                              widget.book.cover,
+                            CachedNetworkImage(
+                              imageUrl: widget.book.cover,
                               fit: BoxFit.cover,
                               width: 200,
                               height: 200,
-                              errorBuilder: (_, _, _) =>
-                                  Container(color: Colors.grey[800]),
+                              placeholder: (c, url) => Container(
+                                color: const Color(0xFF334155),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (c, url, error) => Container(
+                                color: Colors.grey[800],
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  color: Colors.white54,
+                                ),
+                              ),
                             ),
                             Container(
                               width: 40,

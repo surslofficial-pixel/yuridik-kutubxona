@@ -4,26 +4,37 @@ import '../models/category.dart';
 import '../models/ai_topic.dart';
 
 class FirebaseService {
+  static final FirebaseService _instance = FirebaseService._internal();
+
+  factory FirebaseService() {
+    return _instance;
+  }
+
+  FirebaseService._internal();
+
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // === STREAMS ===
-  Stream<List<Category>> get categoriesStream {
-    return _db.collection('categories').snapshots().map((snap) {
-      return snap.docs.map((d) => Category.fromMap(d.data())).toList();
-    });
-  }
+  late final Stream<List<Category>> categoriesStream = _db
+      .collection('categories')
+      .snapshots()
+      .map((snap) => snap.docs.map((d) => Category.fromMap(d.data())).toList())
+      .asBroadcastStream();
 
-  Stream<List<Book>> get booksStream {
-    return _db.collection('books').snapshots().map((snap) {
-      return snap.docs.map((d) => Book.fromMap(d.data())).toList();
-    });
-  }
+  late final Stream<List<Book>> booksStream = _db
+      .collection('books')
+      .snapshots()
+      .map((snap) => snap.docs.map((d) => Book.fromMap(d.data())).toList())
+      .asBroadcastStream();
 
-  Stream<List<AiTopic>> get aiTopicsStream {
-    return _db.collection('ai_topics').snapshots().map((snap) {
-      return snap.docs.map((d) => AiTopic.fromMap(d.id, d.data())).toList();
-    });
-  }
+  late final Stream<List<AiTopic>> aiTopicsStream = _db
+      .collection('ai_topics')
+      .snapshots()
+      .map(
+        (snap) =>
+            snap.docs.map((d) => AiTopic.fromMap(d.id, d.data())).toList(),
+      )
+      .asBroadcastStream();
 
   // === READING SESSIONS ===
   Future<void> addReadingSession({
@@ -112,25 +123,24 @@ class FirebaseService {
   }
 
   // === ADMIN ANALYTICS ===
-  Stream<List<Map<String, dynamic>>> get readingSessionsStream {
-    return _db
-        .collection('reading_sessions')
-        .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map((snap) {
-          return snap.docs.map((d) => d.data()).toList();
-        });
-  }
+  late final Stream<List<Map<String, dynamic>>> readingSessionsStream = _db
+      .collection('reading_sessions')
+      .orderBy('timestamp', descending: true)
+      .snapshots()
+      .map((snap) => snap.docs.map((d) => d.data()).toList())
+      .asBroadcastStream();
 
-  Stream<List<Map<String, dynamic>>> get activeReadersStreamAdmin {
-    return _db.collection('active_readers').snapshots().map((snap) {
-      return snap.docs.map((d) {
-        final data = d.data();
-        data['id'] = d.id;
-        return data;
-      }).toList();
-    });
-  }
+  late final Stream<List<Map<String, dynamic>>> activeReadersStreamAdmin = _db
+      .collection('active_readers')
+      .snapshots()
+      .map((snap) {
+        return snap.docs.map((d) {
+          final data = d.data();
+          data['id'] = d.id;
+          return data;
+        }).toList();
+      })
+      .asBroadcastStream();
 
   Future<void> deleteUserSessions(
     String firstName,
