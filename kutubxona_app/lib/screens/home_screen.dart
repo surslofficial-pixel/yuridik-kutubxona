@@ -5,6 +5,7 @@ import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/book_card.dart';
 import '../widgets/category_card.dart';
+import '../widgets/smooth_page_route.dart';
 import 'category_screen.dart';
 import 'catalog_screen.dart';
 import 'book_details_screen.dart';
@@ -328,7 +329,7 @@ class HomeScreen extends StatelessWidget {
             bookCount: count,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
+              SmoothPageRoute(
                 builder: (_) =>
                     CategoryScreen(slug: cat.slug, categoryName: cat.name),
               ),
@@ -374,7 +375,7 @@ class HomeScreen extends StatelessWidget {
                 ? null
                 : () => Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    SmoothPageRoute(
                       builder: (_) => BookDetailsScreen(bookId: book.id),
                     ),
                   ),
@@ -387,7 +388,7 @@ class HomeScreen extends StatelessWidget {
   void _openCatalog(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const CatalogScreen()),
+      SmoothPageRoute(builder: (_) => const CatalogScreen()),
     );
   }
 }

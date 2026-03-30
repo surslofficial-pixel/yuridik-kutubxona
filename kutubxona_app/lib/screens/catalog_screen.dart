@@ -5,6 +5,7 @@ import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/book_card.dart';
 import '../widgets/category_card.dart';
+import '../widgets/smooth_page_route.dart';
 import 'book_details_screen.dart';
 import 'category_screen.dart';
 
@@ -192,7 +193,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                                     ? null
                                     : () => Navigator.push(
                                         context,
-                                        MaterialPageRoute(
+                                        SmoothPageRoute(
                                           builder: (_) => BookDetailsScreen(
                                             bookId: book.id,
                                           ),
@@ -309,7 +310,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     bookCount: count,
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      SmoothPageRoute(
                         builder: (_) => CategoryScreen(
                           slug: cat.slug,
                           categoryName: cat.name,

@@ -4,6 +4,7 @@ import '../models/category.dart';
 import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/book_card.dart';
+import '../widgets/smooth_page_route.dart';
 import 'book_details_screen.dart';
 
 class CategoryScreen extends StatelessWidget {
@@ -161,7 +162,7 @@ class CategoryScreen extends StatelessWidget {
                           isAudio: isAudioCategory,
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(
+                            SmoothPageRoute(
                               builder: (_) =>
                                   BookDetailsScreen(bookId: book.id),
                             ),

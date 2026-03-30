@@ -6,6 +6,7 @@ import '../services/firebase_service.dart';
 import '../services/bookmark_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/reader_form_dialog.dart';
+import '../widgets/smooth_page_route.dart';
 import 'reader_screen.dart';
 
 class BookDetailsScreen extends StatefulWidget {
@@ -49,7 +50,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
           );
           Navigator.push(
             context,
-            MaterialPageRoute(
+            SmoothPageRoute(
               builder: (_) => ReaderScreen(
                 book: book,
                 firstName: firstName,

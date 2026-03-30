@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/book.dart';
 import '../services/bookmark_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/smooth_page_route.dart';
 import 'book_details_screen.dart';
 
 class SavedBooksScreen extends StatefulWidget {
@@ -99,7 +100,7 @@ class _SavedBooksScreenState extends State<SavedBooksScreen> {
             onTap: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(
+                SmoothPageRoute(
                   builder: (_) => BookDetailsScreen(bookId: book.id),
                 ),
               );
