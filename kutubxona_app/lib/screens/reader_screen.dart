@@ -5,7 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import '../models/book.dart';
 import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
@@ -38,10 +38,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
   // WebView
   WebViewController? _webViewCtrl;
 
-  // YouTube
+  // YouTube (custom WebView-based audio engine)
   YoutubePlayerController? _ytController;
   bool _isYouTube = false;
   String _youtubeVideoId = '';
+  bool _ytPlaying = false;
+  Duration _ytPosition = Duration.zero;
+  Duration _ytDuration = Duration.zero;
+  Timer? _ytProgressTimer;
 
   // URLs
   String _previewUrl = '';
@@ -90,7 +94,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
         }
       } else if (rawUrl.contains('youtube.com') ||
           rawUrl.contains('youtu.be')) {
-        _youtubeVideoId = YoutubePlayer.convertUrlToId(rawUrl) ?? '';
+        final ytMatch = RegExp(
+          r'(?:youtu\.be/|youtube\.com/(?:watch\?v=|embed/|v/))([a-zA-Z0-9_-]{11})',
+        ).firstMatch(rawUrl);
+        _youtubeVideoId = ytMatch?.group(1) ?? '';
         _isYouTube = _youtubeVideoId.isNotEmpty;
       } else {
         _previewUrl = rawUrl;
@@ -108,18 +115,46 @@ class _ReaderScreenState extends State<ReaderScreen> {
       }
     }
 
+    if (_isYouTube) {
+      _ytController = YoutubePlayerController.fromVideoId(
+        videoId: _youtubeVideoId,
+        autoPlay: false,
+        params: const YoutubePlayerParams(
+          showControls: false,
+          showFullscreenButton: false,
+          pointerEvents: PointerEvents.none,
+        ),
+      );
+      _ytController!.listen((event) {
+        if (mounted) {
+          setState(() {
+            _ytPlaying = event.playerState == PlayerState.playing;
+          });
+        }
+      });
+      _ytProgressTimer = Timer.periodic(const Duration(milliseconds: 500), (
+        timer,
+      ) async {
+        if (!mounted || _ytController == null) {
+          timer.cancel();
+          return;
+        }
+        if (_ytPlaying) {
+          final pos = await _ytController!.currentTime;
+          final dur = await _ytController!.duration;
+          if (mounted) {
+            setState(() {
+              _ytPosition = Duration(milliseconds: (pos * 1000).toInt());
+              _ytDuration = Duration(milliseconds: (dur * 1000).toInt());
+            });
+          }
+        }
+      });
+    }
+
     // Init controllers only for mobile
-    if (_isSupportedPlatform) {
-      if (_isYouTube) {
-        _ytController = YoutubePlayerController(
-          initialVideoId: _youtubeVideoId,
-          flags: const YoutubePlayerFlags(
-            autoPlay: false,
-            mute: false,
-            enableCaption: false,
-          ),
-        );
-      } else {
+    if (_isSupportedPlatform && !kIsWeb) {
+      if (!_isYouTube) {
         if (!kIsWeb) {
           final ctrl = WebViewController();
           ctrl.setJavaScriptMode(JavaScriptMode.unrestricted);
@@ -228,10 +263,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
   @override
   void dispose() {
     _heartbeat?.cancel();
+    _ytProgressTimer?.cancel();
+    _ytController?.close();
     if (_activeReaderId.isNotEmpty) {
       _firebase.removeActiveReader(_activeReaderId);
     }
-    _ytController?.dispose();
     super.dispose();
   }
 
@@ -276,7 +312,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Widget _buildWebView() {
-    if (_previewUrl.isEmpty) {
+    if (_previewUrl.isEmpty && !_isYouTube) {
       return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -324,6 +360,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
 
     if (kIsWeb) {
+      if (_isYouTube) {
+        return buildIframeWebView(
+          'https://www.youtube.com/embed/$_youtubeVideoId',
+        );
+      }
       final isAudio =
           widget.book.categorySlug == 'audio-kitoblar' ||
           widget.book.format == 'Audio';
@@ -368,127 +409,246 @@ class _ReaderScreenState extends State<ReaderScreen> {
         ),
       );
     }
-
     if (_ytController == null) return const SizedBox.shrink();
-
-    return YoutubePlayerBuilder(
-      player: YoutubePlayer(
-        controller: _ytController!,
-        showVideoProgressIndicator: true,
-        progressIndicatorColor: const Color(0xFF3B82F6),
-        progressColors: const ProgressBarColors(
-          playedColor: Color(0xFF3B82F6),
-          handleColor: Color(0xFF3B82F6),
+    String fmt(Duration d) =>
+        '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+    return Stack(
+      children: [
+        // Hidden YouTube Player iframe (Must have size and opacity for YT to allow playback)
+        Positioned(
+          left: 0,
+          top: 0,
+          width: 320,
+          height: 240,
+          child: IgnorePointer(
+            child: YoutubePlayer(controller: _ytController!),
+          ),
         ),
-      ),
-      builder: (context, player) {
-        return Column(
-          children: [
-            // Cover + vinyl disc
-            Expanded(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+        // Custom Audio-only UI
+        Positioned.fill(
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF0C1E18), Color(0xFF091118)],
+              ),
+            ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 250,
+                          height: 250,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                blurRadius: 30,
+                                offset: const Offset(0, 15),
+                              ),
+                            ],
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: CachedNetworkImage(
+                            imageUrl: widget.book.cover,
+                            fit: BoxFit.cover,
+                            placeholder: (c, url) => Container(
+                              color: const Color(0xFF1E293B),
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                            errorWidget: (c, url, error) => Container(
+                              color: Colors.grey[800],
+                              child: const Icon(
+                                Icons.broken_image,
+                                color: Colors.white54,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            widget.book.title,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          widget.book.author.isNotEmpty
+                              ? widget.book.author
+                              : "Audio darslik",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Center(
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 32,
+                  ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Vinyl disc
-                      Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFF334155),
-                            width: 5,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(
+                            Icons.queue_music,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            size: 28,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.5),
-                              blurRadius: 30,
-                            ),
-                          ],
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CachedNetworkImage(
-                              imageUrl: widget.book.cover,
-                              fit: BoxFit.cover,
-                              width: 200,
-                              height: 200,
-                              placeholder: (c, url) => Container(
-                                color: const Color(0xFF334155),
-                                child: const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                              errorWidget: (c, url, error) => Container(
-                                color: Colors.grey[800],
-                                child: const Icon(
-                                  Icons.broken_image,
-                                  color: Colors.white54,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF0F172A),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFF334155),
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          Icon(
+                            Icons.favorite_border,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            size: 28,
+                          ),
+                          Icon(
+                            Icons.add,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            size: 32,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 24),
-                      // Title
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Text(
-                          widget.book.title,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 2,
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 6,
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 14,
+                          ),
+                          activeTrackColor: Colors.white,
+                          inactiveTrackColor: Colors.white.withValues(
+                            alpha: 0.2,
+                          ),
+                          thumbColor: Colors.white,
+                        ),
+                        child: Slider(
+                          value: _ytPosition.inSeconds.toDouble().clamp(
+                            0,
+                            _ytDuration.inSeconds > 0
+                                ? _ytDuration.inSeconds.toDouble()
+                                : 1,
+                          ),
+                          min: 0,
+                          max: _ytDuration.inSeconds > 0
+                              ? _ytDuration.inSeconds.toDouble()
+                              : 1,
+                          onChanged: (val) => _ytController!.seekTo(
+                            seconds: val,
+                            allowSeekAhead: true,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Kitob ovozlashtirilgan fonda ijro etilmoqda',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF94A3B8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              fmt(_ytPosition),
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.5),
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              fmt(_ytDuration),
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.5),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.shuffle),
+                            color: Colors.white.withValues(alpha: 0.5),
+                            iconSize: 24,
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.skip_previous),
+                            color: Colors.white,
+                            iconSize: 36,
+                            onPressed: () {
+                              if (_ytPosition > const Duration(seconds: 5)) {
+                                _ytController!.seekTo(
+                                  seconds: 0,
+                                  allowSeekAhead: true,
+                                );
+                              }
+                            },
+                          ),
+                          GestureDetector(
+                            onTap: () => _ytPlaying
+                                ? _ytController!.pauseVideo()
+                                : _ytController!.playVideo(),
+                            child: Container(
+                              width: 64,
+                              height: 64,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                _ytPlaying ? Icons.pause : Icons.play_arrow,
+                                color: Colors.black,
+                                size: 38,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.skip_next),
+                            color: Colors.white,
+                            iconSize: 36,
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.repeat),
+                            color: Colors.white.withValues(alpha: 0.5),
+                            iconSize: 24,
+                            onPressed: () {},
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
-            // Player
-            player,
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 }

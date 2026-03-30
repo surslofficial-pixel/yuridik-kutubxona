@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class AppTheme {
   // Brand colors
@@ -175,30 +176,30 @@ class AppTheme {
   // Icon mapping
   static IconData getCategoryIcon(String iconName) {
     final icons = {
-      'Briefcase': Icons.business_center_outlined,
-      'Landmark': Icons.account_balance_outlined,
-      'Leaf': Icons.eco_outlined,
-      'Users': Icons.people_outline,
-      'FileText': Icons.description_outlined,
-      'Shield': Icons.shield_outlined,
-      'Gavel': Icons.gavel_outlined,
-      'Scale': Icons.balance_outlined,
-      'FileSearch': Icons.find_in_page_outlined,
-      'BookOpen': Icons.menu_book_outlined,
-      'Settings': Icons.settings_outlined,
-      'LayoutDashboard': Icons.dashboard_outlined,
-      'GraduationCap': Icons.school_outlined,
-      'Library': Icons.local_library_outlined,
-      'Fingerprint': Icons.fingerprint_outlined,
-      'Building2': Icons.business_outlined,
-      'BrainCircuit': Icons.psychology_outlined,
-      'ShieldAlert': Icons.security_outlined,
-      'Sparkles': Icons.auto_awesome_outlined,
-      'Database': Icons.storage_outlined,
-      'Lock': Icons.lock_outlined,
-      'Headphones': Icons.headphones_outlined,
-      'Globe': Icons.language_outlined,
+      'Briefcase': LucideIcons.briefcase,
+      'Landmark': LucideIcons.landmark,
+      'Leaf': LucideIcons.leaf,
+      'Users': LucideIcons.users,
+      'FileText': LucideIcons.fileText,
+      'Shield': LucideIcons.shield,
+      'Gavel': LucideIcons.gavel,
+      'Scale': LucideIcons.scale,
+      'FileSearch': LucideIcons.fileSearch,
+      'BookOpen': LucideIcons.bookOpen,
+      'Settings': LucideIcons.settings,
+      'LayoutDashboard': LucideIcons.layoutDashboard,
+      'GraduationCap': LucideIcons.graduationCap,
+      'Library': LucideIcons.library,
+      'Fingerprint': LucideIcons.fingerprint,
+      'Building2': LucideIcons.building2,
+      'BrainCircuit': LucideIcons.brainCircuit,
+      'ShieldAlert': LucideIcons.shieldAlert,
+      'Sparkles': LucideIcons.sparkles,
+      'Database': LucideIcons.database,
+      'Lock': LucideIcons.lock,
+      'Headphones': LucideIcons.headphones,
+      'Globe': LucideIcons.globe,
     };
-    return icons[iconName] ?? Icons.menu_book_outlined;
+    return icons[iconName] ?? LucideIcons.bookOpen;
   }
 }

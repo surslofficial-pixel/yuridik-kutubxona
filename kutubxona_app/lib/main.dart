@@ -6,12 +6,14 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'theme/app_theme.dart';
+import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/catalog_screen.dart';
 import 'screens/ai_law_screen.dart';
 import 'screens/ai_chat_screen.dart';
 import 'screens/about_screen.dart';
 import 'widgets/connectivity_banner.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +42,7 @@ class KutubxonaApp extends StatelessWidget {
         if (child == null) return const SizedBox.shrink();
         return ConnectivityBanner(child: child);
       },
-      home: const MainShell(),
+      home: const SplashScreen(),
     );
   }
 }
@@ -235,36 +237,36 @@ class _MainShellState extends State<MainShell> {
               children: [
                 _navItem(
                   0,
-                  Icons.home_outlined,
-                  Icons.home,
+                  LucideIcons.home,
+                  LucideIcons.home,
                   'Bosh sahifa',
                   const Color(0xFF2563EB),
                 ),
                 _navItem(
                   1,
-                  Icons.local_library_outlined,
-                  Icons.local_library,
+                  LucideIcons.library,
+                  LucideIcons.library,
                   'Katalog',
                   const Color(0xFFF97316),
                 ),
                 _navItem(
                   2,
-                  Icons.menu_book_outlined,
-                  Icons.menu_book,
+                  LucideIcons.bookOpen,
+                  LucideIcons.bookOpen,
                   'AI & Huquq',
                   const Color(0xFFEF4444),
                 ),
                 _navItem(
                   3,
-                  Icons.auto_awesome_outlined,
-                  Icons.auto_awesome,
+                  LucideIcons.sparkles,
+                  LucideIcons.sparkles,
                   'AI Chat',
                   const Color(0xFF059669),
                 ),
                 _navItem(
                   4,
-                  Icons.info_outline,
-                  Icons.info,
+                  LucideIcons.info,
+                  LucideIcons.info,
                   'Haqida',
                   const Color(0xFF6366F1),
                 ),
@@ -288,7 +290,8 @@ class _MainShellState extends State<MainShell> {
       onTap: () => setState(() => _currentIndex = index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: isActive
             ? BoxDecoration(
