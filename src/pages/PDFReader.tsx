@@ -294,134 +294,94 @@ export function PDFReader() {
 
 
         {isAudioMode ? (
-          <div className="w-full h-full max-w-sm sm:max-w-md mx-auto bg-[#1a2130] rounded-none sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative my-auto">
-            {/* TOP DARK SECTION */}
-            <div className="flex-1 bg-gradient-to-b from-[#0F172A] to-[#1E293B] flex flex-col items-center justify-center p-6 py-8 space-y-4 relative border-b border-slate-800/50">
-              <audio
-                ref={audioRef}
-                src={isDriveAudio ? previewUrl : undefined}
-                onTimeUpdate={(e) => setPlayedSeconds(e.currentTarget.currentTime)}
-                onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onEnded={() => setIsPlaying(false)}
-                className="hidden"
-              />
-
-              {/* Spinning Vinyl */}
-              <div className={`w-44 h-44 sm:w-56 sm:h-56 rounded-full overflow-hidden shadow-2xl relative border-[5px] border-[#334155] transition-all duration-300 ${isPlaying ? 'animate-[spin_12s_linear_infinite]' : ''}`}>
-                <img src={book.cover} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-[#0F172A] rounded-full shadow-inner border-2 border-[#334155]" />
-                </div>
-              </div>
-
-              {/* Title and Audio status */}
-              <div className="text-center space-y-3 w-full mt-4">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-900/30 text-blue-400 text-[10px] font-bold tracking-wider mb-1">
-                  <span className={`w-1.5 h-1.5 rounded-full bg-blue-500 ${isPlaying ? 'animate-pulse' : ''}`} />
-                  {isPlaying ? "AUDIO EFIRDA" : "TO'XTATILGAN"}
-                </div>
-                <h2 className="text-lg sm:text-xl font-bold text-white line-clamp-2 leading-tight px-4">{book.title}</h2>
-                <p className="text-slate-400 text-xs sm:text-sm font-medium">Kitob ovozlashtirilgan fonda ijro etilmoqda</p>
-
-                {/* Progress Bar */}
-                <div className="w-full px-4 pt-4">
-                  <div className="w-full flex items-center justify-between text-[11px] text-slate-500 font-medium mb-2">
-                    <span>{formatTime(playedSeconds)}</span>
-                    <span>{formatTime(duration)}</span>
-                  </div>
-                  <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden relative cursor-pointer"
-                    onClick={(e) => {
-                      const bounds = e.currentTarget.getBoundingClientRect();
-                      const x = e.clientX - bounds.left;
-                      const percent = Math.max(0, Math.min(1, x / bounds.width));
-                      if (isDriveAudio && audioRef.current) {
-                        audioRef.current.currentTime = percent * duration;
-                      } else {
-                        if (playerRef.current) {
-                          playerRef.current.seekTo(percent * duration, 'seconds');
-                        }
-                      }
-                    }}>
-                    <div className="h-full bg-blue-500 transition-all duration-100" style={{ width: `${duration > 0 ? (playedSeconds / duration) * 100 : 0}%` }} />
-                  </div>
-                </div>
-
-                {/* Controls */}
-                <div className="flex items-center justify-center gap-8 pt-4">
-                  <button onClick={() => {
-                    if (isDriveAudio && audioRef.current) {
-                      audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 15);
-                    } else {
-                      if (playerRef.current) {
-                        playerRef.current.seekTo(playedSeconds - 15, 'seconds');
-                      }
-                    }
-                  }} className="text-slate-400 hover:text-blue-400 transition-colors">
-                    <Rewind className="w-8 h-8" />
-                  </button>
-                  <button onClick={() => {
-                    if (isDriveAudio && audioRef.current) {
-                      if (isPlaying) {
-                        audioRef.current.pause();
-                      } else {
-                        audioRef.current.play().catch(console.error);
-                      }
-                      return;
-                    }
-                    setIsPlaying(!isPlaying);
-                  }} className="w-16 h-16 bg-blue-500 hover:bg-blue-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] rounded-full transition-all hover:scale-105 flex items-center justify-center">
-                    {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current ml-1" />}
-                  </button>
-                  <button onClick={() => {
-                    if (isDriveAudio && audioRef.current) {
-                      audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + 15);
-                    } else {
-                      if (playerRef.current) {
-                        playerRef.current.seekTo(playedSeconds + 15, 'seconds');
-                      }
-                    }
-                  }} className="text-slate-400 hover:text-blue-400 transition-colors">
-                    <FastForward className="w-8 h-8" />
-                  </button>
-                </div>
+          <div className="w-full h-full bg-[#0b1121] sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col items-center justify-center p-6 relative">
+            <audio
+              ref={audioRef}
+              src={isDriveAudio ? previewUrl : undefined}
+              onTimeUpdate={(e) => setPlayedSeconds(e.currentTarget.currentTime)}
+              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onEnded={() => setIsPlaying(false)}
+              className="hidden"
+            />
+            {/* Spinning Cover Art */}
+            <div className={`w-56 h-56 sm:w-72 sm:h-72 rounded-full overflow-hidden shadow-2xl relative border-[6px] sm:border-[8px] border-[#1e293b] transition-all duration-300 ${isPlaying ? 'animate-[spin_20s_linear_infinite]' : ''} mb-8 sm:mb-12 mt-auto`}>
+              <img src={book.cover} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#0b1121] rounded-full shadow-inner border-4 border-[#1e293b]" />
               </div>
             </div>
 
-            {/* BOTTOM BLUE SECTION */}
-            <div className="h-[240px] bg-[#0265DC] w-full p-6 flex flex-row items-start gap-4 relative overflow-hidden shrink-0 pb-10">
-              {/* Box Cover */}
-              <div className="w-[110px] sm:w-[130px] aspect-[3/4] shrink-0 shadow-[0_10px_20px_rgba(0,0,0,0.3)] rounded-md overflow-hidden z-10 border border-white/10">
-                <img src={book.cover} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            {/* Title and Audio status */}
+            <div className="text-center space-y-3 px-4 w-full max-w-sm mb-auto">
+              <div className="inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full bg-blue-900/30 text-blue-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 border border-blue-900/50 shadow-sm">
+                <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-500 ${isPlaying ? 'animate-pulse' : ''}`} />
+                {isPlaying ? "AUDIO EFIRDA" : "TO'XTATILGAN"}
+              </div>
+              <h2 className="text-xl sm:text-3xl font-extrabold text-white line-clamp-2 leading-tight tracking-wide">{book.title}</h2>
+              <p className="text-slate-400 text-xs sm:text-sm font-medium italic">Kitob ovozlashtirilgan fonda ijro etilmoqda</p>
+
+              {/* Progress Bar */}
+              <div className="w-full pt-6 sm:pt-8 px-2">
+                <div className="w-full flex items-center justify-between text-[10px] sm:text-xs text-slate-500 font-medium mb-2 sm:mb-3">
+                  <span>{formatTime(playedSeconds)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden relative cursor-pointer group"
+                  onClick={(e) => {
+                    const bounds = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - bounds.left;
+                    const percent = Math.max(0, Math.min(1, x / bounds.width));
+                    if (isDriveAudio && audioRef.current) {
+                      audioRef.current.currentTime = percent * duration;
+                    } else {
+                      if (playerRef.current) {
+                        playerRef.current.seekTo(percent * duration, 'seconds');
+                      }
+                    }
+                  }}>
+                  <div className="h-full bg-blue-500 rounded-full transition-all duration-100 group-hover:bg-blue-400" style={{ width: `${duration > 0 ? (playedSeconds / duration) * 100 : 0}%` }} />
+                </div>
               </div>
 
-              {/* Text Info */}
-              <div className="flex flex-col z-10 pt-1 h-full">
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className="text-blue-100 text-[10px] font-medium tracking-wide">#AUDIO KITOB</span>
-                  {book.author && <span className="text-blue-100 text-[10px] uppercase tracking-wider line-clamp-1 truncate">{book.author}</span>}
-                </div>
-                <h3 className="text-white font-bold text-lg sm:text-xl md:text-2xl leading-tight uppercase font-serif tracking-wide line-clamp-4">{book.title}</h3>
-                {book.title.toLowerCase().includes('mavzu') ? null : (
-                  <p className="text-blue-200 mt-auto text-xs uppercase font-medium pt-2">1-MAVZU</p>
-                )}
-              </div>
-
-              {/* Civil.uz Watermark */}
-              <div className="absolute bottom-5 right-5 z-10">
-                <div className="flex items-center bg-transparent border-none">
-                  <span className="bg-white text-[#0265DC] font-extrabold px-1.5 py-[1px] text-[11px] rounded-sm tracking-tight leading-none">civil</span>
-                  <span className="text-white font-bold text-[11px] ml-[2px] tracking-wide leading-none">.uz</span>
-                </div>
-              </div>
-
-              {/* Background watermark effect */}
-              <div className="absolute -right-8 -bottom-12 opacity-[0.03] rotate-[-15deg] pointer-events-none">
-                <div className="flex flex-col font-black text-white text-[80px] leading-[0.8]">
-                  <span>CIVIL</span>
-                  <span>.UZ</span>
-                </div>
+              {/* Controls */}
+              <div className="flex items-center justify-center gap-8 sm:gap-10 pt-6 sm:pt-8 pb-4">
+                <button onClick={() => {
+                  if (isDriveAudio && audioRef.current) {
+                    audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 15);
+                  } else {
+                    if (playerRef.current) {
+                      playerRef.current.seekTo(playedSeconds - 15, 'seconds');
+                    }
+                  }
+                }} className="text-slate-500 hover:text-white transition-colors active:scale-95">
+                  <Rewind className="w-6 h-6 sm:w-7 sm:h-7" />
+                </button>
+                <button onClick={() => {
+                  if (isDriveAudio && audioRef.current) {
+                    if (isPlaying) {
+                      audioRef.current.pause();
+                    } else {
+                      audioRef.current.play().catch(console.error);
+                    }
+                    return;
+                  }
+                  setIsPlaying(!isPlaying);
+                }} className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500 hover:bg-blue-400 shadow-[0_0_30px_rgba(59,130,246,0.3)] text-white rounded-full transition-all hover:scale-105 active:scale-95 flex justify-center items-center">
+                  {isPlaying ? <Pause className="w-8 h-8 sm:w-10 sm:h-10 fill-current" /> : <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-current ml-2" />}
+                </button>
+                <button onClick={() => {
+                  if (isDriveAudio && audioRef.current) {
+                    audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + 15);
+                  } else {
+                    if (playerRef.current) {
+                      playerRef.current.seekTo(playedSeconds + 15, 'seconds');
+                    }
+                  }
+                }} className="text-slate-500 hover:text-white transition-colors active:scale-95">
+                  <FastForward className="w-6 h-6 sm:w-7 sm:h-7" />
+                </button>
               </div>
             </div>
 
