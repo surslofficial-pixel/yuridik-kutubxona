@@ -197,7 +197,7 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                               category = cats.first.name;
                             }
                             return DropdownButtonFormField<String>(
-                              value: category,
+                              initialValue: category,
                               items: cats
                                   .map(
                                     (c) => DropdownMenuItem(
@@ -301,7 +301,7 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<String>(
-                                value: format,
+                                initialValue: format,
                                 items: ['PDF', 'Audio']
                                     .map(
                                       (f) => DropdownMenuItem(
@@ -329,7 +329,7 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: DropdownButtonFormField<String>(
-                                value: language,
+                                initialValue: language,
                                 items: ['O\'zbek', 'Rus', 'Ingliz']
                                     .map(
                                       (l) => DropdownMenuItem(
