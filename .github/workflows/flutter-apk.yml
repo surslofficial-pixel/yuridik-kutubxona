@@ -51,3 +51,12 @@ jobs:
           body: "Yuridik Kutubxona dasturining avtomatik yig'ilgan so'nggi va barqaror versiyasi."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Update Firebase Version
+        if: github.ref == 'refs/heads/main'
+        run: |
+          VERSION=$(grep '^version:' kutubxona_app/pubspec.yaml | sed 's/version: //' | cut -d '+' -f 1 | tr -d '\r')
+          curl -X PATCH \
+            "https://firestore.googleapis.com/v1/projects/surxondaryoyuridikkutubhonasi/databases/(default)/documents/settings/app_info?updateMask.fieldPaths=latestVersion" \
+            -H "Content-Type: application/json" \
+            -d "{\"fields\": {\"latestVersion\": {\"stringValue\": \"$VERSION\"}}}"

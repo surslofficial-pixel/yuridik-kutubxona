@@ -14,107 +14,193 @@ class AdminOverviewTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Umumiy Statistika',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
+          // Welcome header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '👋 Xush kelibsiz, Admin!',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Kutubxona boshqaruvini bu yerdan nazorat qiling',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.8),
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          _buildStatsRow(),
+          const SizedBox(height: 20),
+
+          // Stats grid
+          _buildStatsGrid(),
           const SizedBox(height: 24),
-          const Text(
-            'Hozir o\'qiyotganlar',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
+
+          // Active readers
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.people_rounded,
+                  color: Colors.green,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Hozir o\'qiyotganlar',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           _buildActiveReaders(),
           const SizedBox(height: 24),
-          const Text(
-            'So\'nggi o\'qish sessiyalari',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
+
+          // Recent sessions
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryDark.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.history_rounded,
+                  color: AppTheme.primaryDark,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'So\'nggi sessiyalar',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           _buildRecentSessions(),
         ],
       ),
     );
   }
 
-  Widget _buildStatsRow() {
+  Widget _buildStatsGrid() {
     return Row(
       children: [
         Expanded(
-          child: _buildStatCard('Kitoblar', Icons.book, _fb.booksStream),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            'Kategoriyalar',
-            Icons.category,
-            _fb.categoriesStream,
+          child: _buildGradientStatCard(
+            'Kitoblar',
+            Icons.menu_book_rounded,
+            _fb.booksStream,
+            const [Color(0xFF2563EB), Color(0xFF60A5FA)],
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
-          child: _buildStatCard(
-            'AI Mavzulari',
-            Icons.smart_toy,
+          child: _buildGradientStatCard(
+            'Kategoriyalar',
+            Icons.category_rounded,
+            _fb.categoriesStream,
+            const [Color(0xFF10B981), Color(0xFF34D399)],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildGradientStatCard(
+            'AI Mavzu',
+            Icons.smart_toy_rounded,
             _fb.aiTopicsStream,
+            const [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatCard<T>(
+  Widget _buildGradientStatCard<T>(
     String title,
     IconData icon,
     Stream<List<T>> stream,
+    List<Color> gradientColors,
   ) {
     return StreamBuilder<List<T>>(
       stream: stream,
       builder: (context, snapshot) {
         final count = snapshot.data?.length ?? 0;
-        return Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Icon(icon, size: 32, color: AppTheme.primaryDark),
-                const SizedBox(height: 8),
-                Text(
-                  '$count',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryDark,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-              ],
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: gradientColors.first.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 28, color: Colors.white.withValues(alpha: 0.9)),
+              const SizedBox(height: 8),
+              Text(
+                '$count',
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         );
       },
@@ -126,7 +212,9 @@ class AdminOverviewTab extends StatelessWidget {
       stream: _fb.activeReadersStreamAdmin,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: AppTheme.primaryDark),
+          );
         }
         final readers = snapshot.data ?? [];
         final threeMinAgo =
@@ -136,50 +224,107 @@ class AdminOverviewTab extends StatelessWidget {
             .toList();
 
         if (active.isEmpty) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.person_off,
-                      size: 48,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Hozir hech kim o\'qimayapti',
-                      style: TextStyle(color: Colors.grey.shade500),
-                    ),
-                  ],
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.borderLight),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.person_off_rounded,
+                  size: 44,
+                  color: Colors.grey.shade300,
                 ),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  'Hozir hech kim o\'qimayapti',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           );
         }
 
         return Column(
           children: active.map((r) {
-            return Card(
-              margin: const EdgeInsets.only(bottom: 6),
-              child: ListTile(
-                leading: const CircleAvatar(
-                  backgroundColor: Colors.green,
-                  child: Icon(Icons.book_online, color: Colors.white),
-                ),
-                title: Text(
-                  '${r['firstName']} ${r['lastName']}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(r['groupName'] ?? ''),
-                trailing: const Text(
-                  '🟢 Faol',
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.w600,
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      color: Colors.green,
+                      size: 20,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${r['firstName']} ${r['lastName']}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          r['groupName'] ?? '',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.circle, size: 8, color: Colors.green),
+                        SizedBox(width: 4),
+                        Text(
+                          'Faol',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             );
           }).toList(),
@@ -193,21 +338,26 @@ class AdminOverviewTab extends StatelessWidget {
       stream: _fb.readingSessionsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: AppTheme.primaryDark),
+          );
         }
         final sessions = snapshot.data ?? [];
         final recent = sessions.take(10).toList();
 
         if (recent.isEmpty) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Text(
-                  'Hozircha sessiya yo\'q',
-                  style: TextStyle(color: Colors.grey.shade500),
-                ),
-              ),
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.borderLight),
+            ),
+            child: Text(
+              'Hozircha sessiya yo\'q',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade400),
             ),
           );
         }
@@ -215,20 +365,60 @@ class AdminOverviewTab extends StatelessWidget {
         return Column(
           children: recent.map((s) {
             final dt = DateTime.fromMillisecondsSinceEpoch(s['timestamp'] ?? 0);
-            return Card(
-              margin: const EdgeInsets.only(bottom: 4),
-              child: ListTile(
-                leading: const Icon(
-                  Icons.access_time,
-                  color: AppTheme.primaryDark,
-                ),
-                title: Text(
-                  '${s['firstName']} ${s['lastName']}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  '${s['groupName']} | ${dt.day}/${dt.month}/${dt.year} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}',
-                ),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppTheme.borderLight),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryDark.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.access_time_rounded,
+                      color: AppTheme.primaryDark,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${s['firstName']} ${s['lastName']}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          s['groupName'] ?? '',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '${dt.day}/${dt.month} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.textTertiary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             );
           }).toList(),
