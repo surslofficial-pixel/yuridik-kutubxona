@@ -159,15 +159,13 @@ class CategoryScreen extends StatelessWidget {
                         return BookCard(
                           book: book,
                           isAudio: isAudioCategory,
-                          onTap: isAudioCategory
-                              ? null
-                              : () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        BookDetailsScreen(bookId: book.id),
-                                  ),
-                                ),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  BookDetailsScreen(bookId: book.id),
+                            ),
+                          ),
                         );
                       }, childCount: books.length),
                     ),

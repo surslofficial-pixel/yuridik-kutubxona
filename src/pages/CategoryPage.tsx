@@ -84,8 +84,8 @@ export function CategoryPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              onClick={category.group !== 'audio' ? () => navigate(`/books/${book.id}`) : undefined}
-              className={category.group !== 'audio' ? "cursor-pointer" : ""}
+              onClick={() => navigate(`/books/${book.id}`)}
+              className="cursor-pointer"
             >
               <Card className="overflow-hidden group hover:shadow-lg transition-all duration-300 border-slate-100 h-full flex flex-col">
                 <div className="aspect-[3/4] overflow-hidden relative shrink-0">
@@ -95,17 +95,15 @@ export function CategoryPage() {
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                     referrerPolicy="no-referrer"
                   />
-                  {category.group !== 'audio' && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                      <Button
-                        variant="default"
-                        className="w-full bg-[#3B82F6] hover:bg-[#1E3A8A] rounded-full"
-                        onClick={(e) => { e.stopPropagation(); setReaderBookId(book.id); }}
-                      >
-                        O'qish
-                      </Button>
-                    </div>
-                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                    <Button
+                      variant="default"
+                      className="w-full bg-[#3B82F6] hover:bg-[#1E3A8A] rounded-full"
+                      onClick={(e) => { e.stopPropagation(); setReaderBookId(book.id); }}
+                    >
+                      {category.group === 'audio' ? '🎧 Eshitish' : "O'qish"}
+                    </Button>
+                  </div>
                 </div>
                 <CardHeader className="p-4 space-y-1 flex-1">
                   <div className="flex flex-col mb-1">
