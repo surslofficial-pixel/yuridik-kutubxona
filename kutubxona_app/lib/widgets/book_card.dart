@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/book.dart';
 import '../theme/app_theme.dart';
+import 'base64_image.dart';
 
 class BookCard extends StatelessWidget {
   final Book book;
@@ -56,20 +57,19 @@ class BookCard extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     book.cover.startsWith('data:image')
-                        ? Image.memory(
-                            UriData.parse(book.cover).contentAsBytes(),
+                        ? Base64Image(
+                            base64String: book.cover,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  color: Colors.grey[100],
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      size: 32,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
+                            errorWidget: Container(
+                              color: Colors.grey[100],
+                              child: const Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 32,
+                                  color: Colors.grey,
                                 ),
+                              ),
+                            ),
                           )
                         : CachedNetworkImage(
                             imageUrl: book.cover,

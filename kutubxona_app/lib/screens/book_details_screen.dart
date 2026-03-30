@@ -7,6 +7,7 @@ import '../services/bookmark_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/reader_form_dialog.dart';
 import '../widgets/smooth_page_route.dart';
+import '../widgets/base64_image.dart';
 import 'reader_screen.dart';
 
 class BookDetailsScreen extends StatefulWidget {
@@ -116,18 +117,17 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                         fit: StackFit.expand,
                         children: [
                           book.cover.startsWith('data:image')
-                              ? Image.memory(
-                                  UriData.parse(book.cover).contentAsBytes(),
+                              ? Base64Image(
+                                  base64String: book.cover,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Container(
-                                        color: Colors.grey[200],
-                                        child: const Icon(
-                                          Icons.broken_image,
-                                          size: 60,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
+                                  errorWidget: Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(
+                                      Icons.broken_image,
+                                      size: 60,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 )
                               : CachedNetworkImage(
                                   imageUrl: book.cover,

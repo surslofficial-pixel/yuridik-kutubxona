@@ -423,16 +423,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
         '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
     return Stack(
       children: [
-        // Hidden YouTube Player iframe (Must have size and opacity for YT to allow playback)
-        Positioned(
-          left: 0,
-          top: 0,
-          width: 320,
-          height: 240,
-          child: IgnorePointer(
-            child: YoutubePlayer(controller: _ytController!),
-          ),
-        ),
         // Custom Audio-only UI
         Positioned.fill(
           child: Container(
@@ -446,7 +436,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
             child: Column(
               children: [
                 Expanded(
-                  child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 64),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -520,27 +511,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   ),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Icon(
-                            Icons.queue_music,
-                            color: Colors.white.withValues(alpha: 0.7),
-                            size: 28,
-                          ),
-                          Icon(
-                            Icons.favorite_border,
-                            color: Colors.white.withValues(alpha: 0.7),
-                            size: 28,
-                          ),
-                          Icon(
-                            Icons.add,
-                            color: Colors.white.withValues(alpha: 0.7),
-                            size: 32,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
                           trackHeight: 2,
@@ -654,6 +624,20 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+        // YouTube iframe ON TOP of the opaque gradient, which avoids Chromium's occlusion detection.
+        // Opacity 0.01 makes it practically invisible while preventing the WebView from pausing.
+        Positioned(
+          left: 0,
+          top: 0,
+          width: 320,
+          height: 240,
+          child: Opacity(
+            opacity: 0.01,
+            child: IgnorePointer(
+              child: YoutubePlayer(controller: _ytController!),
             ),
           ),
         ),
