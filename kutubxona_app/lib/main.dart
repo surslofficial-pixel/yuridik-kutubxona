@@ -77,8 +77,29 @@ class _MainShellState extends State<MainShell> {
           doc.data() != null &&
           doc.data()!.containsKey('latestVersion')) {
         final latestVersion = doc['latestVersion'] as String;
-        if (latestVersion != currentVersion &&
-            latestVersion.compareTo(currentVersion) > 0) {
+
+        final currentParts = currentVersion
+            .split('.')
+            .map((e) => int.tryParse(e) ?? 0)
+            .toList();
+        final latestParts = latestVersion
+            .split('.')
+            .map((e) => int.tryParse(e) ?? 0)
+            .toList();
+
+        bool isUpdateAvailable = false;
+        for (int i = 0; i < 3; i++) {
+          final c = i < currentParts.length ? currentParts[i] : 0;
+          final l = i < latestParts.length ? latestParts[i] : 0;
+          if (l > c) {
+            isUpdateAvailable = true;
+            break;
+          } else if (l < c) {
+            break;
+          }
+        }
+
+        if (isUpdateAvailable) {
           if (!mounted) return;
           showDialog(
             context: context,
