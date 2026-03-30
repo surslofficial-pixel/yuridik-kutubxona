@@ -16,7 +16,9 @@ import {
   Rewind
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ReactPlayer from 'react-player';
+import ReactPlayerDefault from 'react-player';
+
+const ReactPlayer = ReactPlayerDefault as any;
 
 
 
@@ -382,10 +384,8 @@ export function PDFReader() {
               </div>
             </div>
 
-            {/* Hidden ReactPlayer for YouTube Audio */}
             {isYouTubeEmbed && (
               <div className="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden">
-                {/* @ts-ignore */}
                 <ReactPlayer
                   ref={playerRef}
                   url={`https://www.youtube.com/watch?v=${youtubeVideoId}`}
