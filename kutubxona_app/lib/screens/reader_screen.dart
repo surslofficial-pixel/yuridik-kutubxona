@@ -118,10 +118,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (_isYouTube) {
       _ytController = YoutubePlayerController.fromVideoId(
         videoId: _youtubeVideoId,
-        autoPlay: false,
+        autoPlay: true,
         params: const YoutubePlayerParams(
           showControls: false,
           showFullscreenButton: false,
+          mute: false,
         ),
       );
       _ytController!.listen((event) {
@@ -445,8 +446,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 220,
-                          height: 220,
+                          width: 170,
+                          height: 170,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
@@ -478,7 +479,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: Text(
