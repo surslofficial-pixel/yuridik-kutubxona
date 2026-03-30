@@ -324,6 +324,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
 
     if (kIsWeb) {
+      final isAudio =
+          widget.book.categorySlug == 'audio-kitoblar' ||
+          widget.book.format == 'Audio';
+      if (isAudio) {
+        return buildHtmlAudioPlayer(_previewUrl, widget.book.title);
+      }
       return buildIframeWebView(_previewUrl);
     }
     return WebViewWidget(controller: _webViewCtrl!);
