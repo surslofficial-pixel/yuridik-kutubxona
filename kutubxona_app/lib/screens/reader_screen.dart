@@ -137,7 +137,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
           });
         }
       });
-      _ytProgressTimer = Timer.periodic(const Duration(milliseconds: 500), (
+      _ytProgressTimer = Timer.periodic(const Duration(milliseconds: 1000), (
         timer,
       ) async {
         if (!mounted || _ytController == null) {
@@ -148,12 +148,17 @@ class _ReaderScreenState extends State<ReaderScreen> {
           final pos = await _ytController!.currentTime;
           final dur = await _ytController!.duration;
           if (mounted) {
-            setState(() {
-              _ytPosition = Duration(milliseconds: (pos * 1000).toInt());
-              if (dur > 0) {
-                _ytDuration = Duration(milliseconds: (dur * 1000).toInt());
-              }
-            });
+            final newPos = Duration(milliseconds: (pos * 1000).toInt());
+            final newDur = dur > 0
+                ? Duration(milliseconds: (dur * 1000).toInt())
+                : _ytDuration;
+            // Only rebuild if values actually changed
+            if (newPos != _ytPosition || newDur != _ytDuration) {
+              setState(() {
+                _ytPosition = newPos;
+                _ytDuration = newDur;
+              });
+            }
           }
         } catch (_) {
           // Player not ready yet, skip this tick

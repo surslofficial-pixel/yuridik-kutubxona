@@ -14,26 +14,27 @@ class FirebaseService {
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // === STREAMS ===
-  // Use getters instead of late final to ensure each subscriber
-  // gets a fresh stream that immediately emits the current Firestore state.
-  Stream<List<Category>> get categoriesStream => _db
+  // === STREAMS (single shared subscription per collection) ===
+  late final Stream<List<Category>> categoriesStream = _db
       .collection('categories')
       .snapshots()
-      .map((snap) => snap.docs.map((d) => Category.fromMap(d.data())).toList());
+      .map((snap) => snap.docs.map((d) => Category.fromMap(d.data())).toList())
+      .asBroadcastStream();
 
-  Stream<List<Book>> get booksStream => _db
+  late final Stream<List<Book>> booksStream = _db
       .collection('books')
       .snapshots()
-      .map((snap) => snap.docs.map((d) => Book.fromMap(d.data())).toList());
+      .map((snap) => snap.docs.map((d) => Book.fromMap(d.data())).toList())
+      .asBroadcastStream();
 
-  Stream<List<AiTopic>> get aiTopicsStream => _db
+  late final Stream<List<AiTopic>> aiTopicsStream = _db
       .collection('ai_topics')
       .snapshots()
       .map(
         (snap) =>
             snap.docs.map((d) => AiTopic.fromMap(d.id, d.data())).toList(),
-      );
+      )
+      .asBroadcastStream();
 
   // === READING SESSIONS ===
   Future<void> addReadingSession({

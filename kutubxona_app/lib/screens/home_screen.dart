@@ -12,167 +12,163 @@ import 'book_details_screen.dart';
 import 'admin/admin_login_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen>
+    with AutomaticKeepAliveClientMixin {
+  final _firebase = FirebaseService();
+
+  List<Category> _categories = [];
+  List<Book> _books = [];
+  bool get _isLoading => _categories.isEmpty && _books.isEmpty;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _firebase.categoriesStream.listen((cats) {
+      if (mounted) setState(() => _categories = cats);
+    });
+    _firebase.booksStream.listen((books) {
+      if (mounted) setState(() => _books = books);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final firebase = FirebaseService();
+    super.build(context);
 
-    return StreamBuilder<List<Category>>(
-      stream: firebase.categoriesStream,
-      builder: (context, catSnap) {
-        return StreamBuilder<List<Book>>(
-          stream: firebase.booksStream,
-          builder: (context, bookSnap) {
-            final categories = catSnap.data ?? [];
-            final books = bookSnap.data ?? [];
-
-            final mainCats = categories
-                .where((c) => c.group == 'maxsus')
-                .toList();
-            final umumtalimCats = categories
-                .where((c) => c.group == 'umumtalim')
-                .toList();
-            final badiiyCats = categories
-                .where((c) => c.group == 'badiiy')
-                .toList();
-            final audioCats = categories
-                .where((c) => c.group == 'audio')
-                .toList();
-
-            final badiiySlugs = badiiyCats.map((c) => c.slug).toSet();
-            final badiiyBooks = books
-                .where((b) => badiiySlugs.contains(b.categorySlug))
-                .take(4)
-                .toList();
-
-            final audioSlugs = audioCats.map((c) => c.slug).toSet();
-            final audioBooks = books
-                .where((b) => audioSlugs.contains(b.categorySlug))
-                .take(4)
-                .toList();
-
-            final recentBooks = List<Book>.from(books)
-              ..sort((a, b) {
-                final da = a.date != null
-                    ? DateTime.tryParse(a.date!)?.millisecondsSinceEpoch ?? 0
-                    : 0;
-                final db = b.date != null
-                    ? DateTime.tryParse(b.date!)?.millisecondsSinceEpoch ?? 0
-                    : 0;
-                return db.compareTo(da);
-              });
-            final recentFour = recentBooks.take(4).toList();
-
-            if (!catSnap.hasData && !bookSnap.hasData) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    CircularProgressIndicator(color: AppTheme.primaryDark),
-                    SizedBox(height: 16),
-                    Text(
-                      'Iltimos kuting, yuklanmoqda...',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return RefreshIndicator(
-              color: AppTheme.primaryBlue,
-              backgroundColor: Colors.white,
-              onRefresh: () async {
-                // Firebase streams are real-time, so we just provide satisfying UI feedback
-                await Future.delayed(const Duration(milliseconds: 1200));
-              },
-              child: ListView(
-                padding: const EdgeInsets.only(bottom: 32),
-                children: [
-                  // Hero Section
-                  _buildHero(context),
-                  const SizedBox(height: 24),
-
-                  // Maxsus fanlar
-                  if (mainCats.isNotEmpty) ...[
-                    _sectionHeader(
-                      context,
-                      'Maxsus fanlar darsliklari',
-                      onSeeAll: () => _openCatalog(context),
-                    ),
-                    _buildCategoryGrid(context, mainCats, books),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // Umumta'lim
-                  if (umumtalimCats.isNotEmpty) ...[
-                    _sectionHeader(context, "Umumta'lim fanlari"),
-                    _buildCategoryGrid(context, umumtalimCats, books),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // Badiiy
-                  if (badiiyCats.isNotEmpty) ...[
-                    _sectionHeader(context, 'Badiiy adabiyotlar'),
-                    _buildCategoryGrid(context, badiiyCats, books),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // Audio
-                  if (audioCats.isNotEmpty) ...[
-                    _sectionHeader(context, 'Audio Darslik'),
-                    _buildCategoryGrid(context, audioCats, books),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // Badiiy kitoblar
-                  if (badiiyBooks.isNotEmpty) ...[
-                    _sectionHeader(
-                      context,
-                      'Badiiy kitoblar',
-                      onSeeAll: () => _openCatalog(context),
-                    ),
-                    _buildBookGrid(context, badiiyBooks, categories),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // Audio kitoblar
-                  if (audioBooks.isNotEmpty) ...[
-                    _sectionHeader(
-                      context,
-                      '🎵 Audio Darslik',
-                      onSeeAll: () => _openCatalog(context),
-                    ),
-                    _buildBookGrid(
-                      context,
-                      audioBooks,
-                      categories,
-                      isAudio: true,
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // Yangi kitoblar
-                  if (recentFour.isNotEmpty) ...[
-                    _sectionHeader(
-                      context,
-                      "Yangi qo'shilgan kitoblar",
-                      onSeeAll: () => _openCatalog(context),
-                    ),
-                    _buildBookGrid(context, recentFour, categories),
-                  ],
-                ],
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            CircularProgressIndicator(color: AppTheme.primaryDark),
+            SizedBox(height: 16),
+            Text(
+              'Iltimos kuting, yuklanmoqda...',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textSecondary,
               ),
-            );
-          },
-        );
+            ),
+          ],
+        ),
+      );
+    }
+
+    final categories = _categories;
+    final books = _books;
+
+    final mainCats = categories.where((c) => c.group == 'maxsus').toList();
+    final umumtalimCats = categories
+        .where((c) => c.group == 'umumtalim')
+        .toList();
+    final badiiyCats = categories.where((c) => c.group == 'badiiy').toList();
+    final audioCats = categories.where((c) => c.group == 'audio').toList();
+
+    final badiiySlugs = badiiyCats.map((c) => c.slug).toSet();
+    final badiiyBooks = books
+        .where((b) => badiiySlugs.contains(b.categorySlug))
+        .take(4)
+        .toList();
+
+    final audioSlugs = audioCats.map((c) => c.slug).toSet();
+    final audioBooks = books
+        .where((b) => audioSlugs.contains(b.categorySlug))
+        .take(4)
+        .toList();
+
+    final recentBooks = List<Book>.from(books)
+      ..sort((a, b) {
+        final da = a.date != null
+            ? DateTime.tryParse(a.date!)?.millisecondsSinceEpoch ?? 0
+            : 0;
+        final db = b.date != null
+            ? DateTime.tryParse(b.date!)?.millisecondsSinceEpoch ?? 0
+            : 0;
+        return db.compareTo(da);
+      });
+    final recentFour = recentBooks.take(4).toList();
+
+    return RefreshIndicator(
+      color: AppTheme.primaryBlue,
+      backgroundColor: Colors.white,
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 1200));
       },
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          _buildHero(context),
+          const SizedBox(height: 24),
+
+          if (mainCats.isNotEmpty) ...[
+            _sectionHeader(
+              context,
+              'Maxsus fanlar darsliklari',
+              onSeeAll: () => _openCatalog(context),
+            ),
+            _buildCategoryGrid(context, mainCats, books),
+            const SizedBox(height: 24),
+          ],
+
+          if (umumtalimCats.isNotEmpty) ...[
+            _sectionHeader(context, "Umumta'lim fanlari"),
+            _buildCategoryGrid(context, umumtalimCats, books),
+            const SizedBox(height: 24),
+          ],
+
+          if (badiiyCats.isNotEmpty) ...[
+            _sectionHeader(context, 'Badiiy adabiyotlar'),
+            _buildCategoryGrid(context, badiiyCats, books),
+            const SizedBox(height: 24),
+          ],
+
+          if (audioCats.isNotEmpty) ...[
+            _sectionHeader(context, 'Audio Darslik'),
+            _buildCategoryGrid(context, audioCats, books),
+            const SizedBox(height: 24),
+          ],
+
+          if (badiiyBooks.isNotEmpty) ...[
+            _sectionHeader(
+              context,
+              'Badiiy kitoblar',
+              onSeeAll: () => _openCatalog(context),
+            ),
+            _buildBookGrid(context, badiiyBooks, categories),
+            const SizedBox(height: 24),
+          ],
+
+          if (audioBooks.isNotEmpty) ...[
+            _sectionHeader(
+              context,
+              '🎵 Audio Darslik',
+              onSeeAll: () => _openCatalog(context),
+            ),
+            _buildBookGrid(context, audioBooks, categories, isAudio: true),
+            const SizedBox(height: 24),
+          ],
+
+          if (recentFour.isNotEmpty) ...[
+            _sectionHeader(
+              context,
+              "Yangi qo'shilgan kitoblar",
+              onSeeAll: () => _openCatalog(context),
+            ),
+            _buildBookGrid(context, recentFour, categories),
+          ],
+        ],
+      ),
     );
   }
 

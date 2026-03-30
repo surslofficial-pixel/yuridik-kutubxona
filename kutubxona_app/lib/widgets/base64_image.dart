@@ -1,6 +1,32 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+/// A simple LRU cache with a max capacity.
+class _LruCache {
+  final int maxSize;
+  final Map<String, Uint8List> _map = {};
+
+  _LruCache(this.maxSize);
+
+  Uint8List? get(String key) {
+    final value = _map.remove(key);
+    if (value != null) {
+      _map[key] = value; // move to end (most recently used)
+    }
+    return value;
+  }
+
+  void put(String key, Uint8List value) {
+    _map.remove(key);
+    if (_map.length >= maxSize) {
+      _map.remove(_map.keys.first); // evict least recently used
+    }
+    _map[key] = value;
+  }
+
+  bool containsKey(String key) => _map.containsKey(key);
+}
+
 class Base64Image extends StatefulWidget {
   final String base64String;
   final BoxFit fit;
@@ -20,7 +46,7 @@ class Base64Image extends StatefulWidget {
 }
 
 class _Base64ImageState extends State<Base64Image> {
-  static final Map<String, Uint8List> _cache = {};
+  static final _LruCache _cache = _LruCache(50);
   Uint8List? _bytes;
   bool _hasError = false;
 
@@ -39,9 +65,11 @@ class _Base64ImageState extends State<Base64Image> {
   }
 
   Future<void> _load() async {
-    if (_cache.containsKey(widget.base64String)) {
+    // Fast path: serve from LRU cache synchronously
+    final cached = _cache.get(widget.base64String);
+    if (cached != null) {
       setState(() {
-        _bytes = _cache[widget.base64String];
+        _bytes = cached;
         _hasError = false;
       });
       return;
@@ -50,7 +78,7 @@ class _Base64ImageState extends State<Base64Image> {
     try {
       // Decode inside compute to 100% avoid blocking main isolate
       final bytes = await compute(_decodeBase64, widget.base64String);
-      _cache[widget.base64String] = bytes;
+      _cache.put(widget.base64String, bytes);
       if (mounted) {
         setState(() {
           _bytes = bytes;

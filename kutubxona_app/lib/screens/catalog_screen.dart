@@ -21,223 +21,221 @@ class _CatalogScreenState extends State<CatalogScreen> {
   String _searchQuery = '';
   String? _selectedCategory;
 
+  List<Category> _categories = [];
+  List<Book> _books = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _firebase.categoriesStream.listen((cats) {
+      if (mounted) setState(() => _categories = cats);
+    });
+    _firebase.booksStream.listen((books) {
+      if (mounted) setState(() => _books = books);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Category>>(
-      stream: _firebase.categoriesStream,
-      builder: (context, catSnap) {
-        return StreamBuilder<List<Book>>(
-          stream: _firebase.booksStream,
-          builder: (context, bookSnap) {
-            final categories = catSnap.data ?? [];
-            final books = bookSnap.data ?? [];
+    final categories = _categories;
+    final books = _books;
 
-            final filteredBooks = books.where((b) {
-              final matchSearch =
-                  _searchQuery.isEmpty ||
-                  b.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                  b.author.toLowerCase().contains(_searchQuery.toLowerCase());
-              final matchCategory =
-                  _selectedCategory == null ||
-                  b.categorySlug == _selectedCategory;
-              return matchSearch && matchCategory;
-            }).toList();
+    final filteredBooks = books.where((b) {
+      final matchSearch =
+          _searchQuery.isEmpty ||
+          b.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          b.author.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchCategory =
+          _selectedCategory == null || b.categorySlug == _selectedCategory;
+      return matchSearch && matchCategory;
+    }).toList();
 
-            return Scaffold(
-              backgroundColor: AppTheme.surfaceLight,
-              body: SafeArea(
-                child: RefreshIndicator(
-                  color: AppTheme.primaryBlue,
-                  backgroundColor: Colors.white,
-                  onRefresh: () async {
-                    await Future.delayed(const Duration(milliseconds: 1200));
-                  },
-                  child: CustomScrollView(
-                    slivers: [
-                      // Header
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Kitoblar katalogi',
-                                style: TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppTheme.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                "Barcha mavjud kitoblarni ko'ring, qidiring va o'qing.",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppTheme.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              // Search bar
-                              TextField(
-                                onChanged: (v) =>
-                                    setState(() => _searchQuery = v),
-                                decoration: InputDecoration(
-                                  hintText:
-                                      "Kitob nomi yoki muallif bo'yicha qidirish...",
-                                  hintStyle: const TextStyle(fontSize: 14),
-                                  prefixIcon: const Icon(
-                                    Icons.search,
-                                    color: AppTheme.textTertiary,
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    borderSide: const BorderSide(
-                                      color: AppTheme.borderLight,
-                                    ),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    borderSide: const BorderSide(
-                                      color: AppTheme.borderLight,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+    return Scaffold(
+      backgroundColor: AppTheme.surfaceLight,
+      body: SafeArea(
+        child: RefreshIndicator(
+          color: AppTheme.primaryBlue,
+          backgroundColor: Colors.white,
+          onRefresh: () async {
+            await Future.delayed(const Duration(milliseconds: 1200));
+          },
+          child: CustomScrollView(
+            slivers: [
+              // Header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Kitoblar katalogi',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
-                      // Category filter chips
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 42,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            children: [
-                              _filterChip('Barchasi', null),
-                              const SizedBox(width: 8),
-                              ...categories.map((c) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: _filterChip(c.name, c.slug),
-                                );
-                              }),
-                            ],
-                          ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        "Barcha mavjud kitoblarni ko'ring, qidiring va o'qing.",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.textSecondary,
                         ),
                       ),
-
-                      const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-                      // Books grid
-                      if (filteredBooks.isEmpty)
-                        SliverToBoxAdapter(
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 60),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.menu_book_outlined,
-                                    size: 64,
-                                    color: Colors.grey[300],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'Kitob topilmadi',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.textSecondary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    "Boshqa kalit so'z bilan qidiring.",
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppTheme.textTertiary,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        decoration: InputDecoration(
+                          hintText:
+                              "Kitob nomi yoki muallif bo'yicha qidirish...",
+                          hintStyle: const TextStyle(fontSize: 14),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: AppTheme.textTertiary,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(
+                              color: AppTheme.borderLight,
                             ),
                           ),
-                        )
-                      else
-                        SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          sliver: SliverGrid(
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 12,
-                                  crossAxisSpacing: 12,
-                                  childAspectRatio: 0.48,
-                                ),
-                            delegate: SliverChildBuilderDelegate((context, i) {
-                              final book = filteredBooks[i];
-                              final catGroup = categories
-                                  .where((c) => c.slug == book.categorySlug)
-                                  .firstOrNull
-                                  ?.group;
-                              final isAudio = catGroup == 'audio';
-                              return BookCard(
-                                book: book,
-                                isAudio: isAudio,
-                                onTap: isAudio
-                                    ? null
-                                    : () => Navigator.push(
-                                        context,
-                                        SmoothPageRoute(
-                                          builder: (_) => BookDetailsScreen(
-                                            bookId: book.id,
-                                          ),
-                                        ),
-                                      ),
-                              );
-                            }, childCount: filteredBooks.length),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(
+                              color: AppTheme.borderLight,
+                            ),
                           ),
                         ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-                      // Categories sections
-                      _categorySectionSliver(
-                        'Maxsus fanlar darsliklari',
-                        categories.where((c) => c.group == 'maxsus').toList(),
-                        books,
                       ),
-                      _categorySectionSliver(
-                        "Umumta'lim fanlari",
-                        categories
-                            .where((c) => c.group == 'umumtalim')
-                            .toList(),
-                        books,
-                      ),
-                      _categorySectionSliver(
-                        'Badiiy adabiyotlar',
-                        categories.where((c) => c.group == 'badiiy').toList(),
-                        books,
-                      ),
-                      _categorySectionSliver(
-                        'Audio kitoblar',
-                        categories.where((c) => c.group == 'audio').toList(),
-                        books,
-                      ),
-
-                      const SliverToBoxAdapter(child: SizedBox(height: 40)),
                     ],
                   ),
                 ),
               ),
-            );
-          },
-        );
-      },
+              // Category filter chips
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 42,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+                      _filterChip('Barchasi', null),
+                      const SizedBox(width: 8),
+                      ...categories.map((c) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: _filterChip(c.name, c.slug),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+              // Books grid
+              if (filteredBooks.isEmpty)
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 60),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.menu_book_outlined,
+                            size: 64,
+                            color: Colors.grey[300],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Kitob topilmadi',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            "Boshqa kalit so'z bilan qidiring.",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.48,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, i) {
+                      final book = filteredBooks[i];
+                      final catGroup = categories
+                          .where((c) => c.slug == book.categorySlug)
+                          .firstOrNull
+                          ?.group;
+                      final isAudio = catGroup == 'audio';
+                      return BookCard(
+                        book: book,
+                        isAudio: isAudio,
+                        onTap: isAudio
+                            ? null
+                            : () => Navigator.push(
+                                context,
+                                SmoothPageRoute(
+                                  builder: (_) =>
+                                      BookDetailsScreen(bookId: book.id),
+                                ),
+                              ),
+                      );
+                    }, childCount: filteredBooks.length),
+                  ),
+                ),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+              // Categories sections
+              _categorySectionSliver(
+                'Maxsus fanlar darsliklari',
+                categories.where((c) => c.group == 'maxsus').toList(),
+                books,
+              ),
+              _categorySectionSliver(
+                "Umumta'lim fanlari",
+                categories.where((c) => c.group == 'umumtalim').toList(),
+                books,
+              ),
+              _categorySectionSliver(
+                'Badiiy adabiyotlar',
+                categories.where((c) => c.group == 'badiiy').toList(),
+                books,
+              ),
+              _categorySectionSliver(
+                'Audio kitoblar',
+                categories.where((c) => c.group == 'audio').toList(),
+                books,
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
