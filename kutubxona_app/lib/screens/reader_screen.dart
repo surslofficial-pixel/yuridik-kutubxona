@@ -122,7 +122,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
         params: const YoutubePlayerParams(
           showControls: false,
           showFullscreenButton: false,
-          pointerEvents: PointerEvents.none,
         ),
       );
       _ytController!.listen((event) {
@@ -139,15 +138,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
           timer.cancel();
           return;
         }
-        if (_ytPlaying) {
+        try {
           final pos = await _ytController!.currentTime;
           final dur = await _ytController!.duration;
           if (mounted) {
             setState(() {
               _ytPosition = Duration(milliseconds: (pos * 1000).toInt());
-              _ytDuration = Duration(milliseconds: (dur * 1000).toInt());
+              if (dur > 0) {
+                _ytDuration = Duration(milliseconds: (dur * 1000).toInt());
+              }
             });
           }
+        } catch (_) {
+          // Player not ready yet, skip this tick
         }
       });
     }
@@ -442,8 +445,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 250,
-                          height: 250,
+                          width: 220,
+                          height: 220,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
@@ -475,7 +478,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 20),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: Text(
@@ -507,7 +510,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
-                    vertical: 32,
+                    vertical: 16,
                   ),
                   child: Column(
                     children: [
