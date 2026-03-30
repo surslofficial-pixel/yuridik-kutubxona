@@ -123,9 +123,87 @@ class _ReaderScreenState extends State<ReaderScreen> {
         if (!kIsWeb) {
           final ctrl = WebViewController();
           ctrl.setJavaScriptMode(JavaScriptMode.unrestricted);
-          ctrl.loadRequest(
-            Uri.parse(_previewUrl.isNotEmpty ? _previewUrl : 'about:blank'),
-          );
+          if (isAudio && !_isYouTube) {
+            final htmlContent =
+                '''
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                  body {
+                    background-color: #0f172a;
+                    color: white;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    margin: 0;
+                    padding: 20px;
+                    box-sizing: border-box;
+                    font-family: system-ui, sans-serif;
+                  }
+                  .player-card {
+                    background: #1e293b;
+                    padding: 30px;
+                    border-radius: 20px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                    text-align: center;
+                    width: 100%;
+                    max-width: 400px;
+                  }
+                  audio {
+                    width: 100%;
+                    margin-top: 20px;
+                    outline: none;
+                    border-radius: 10px;
+                  }
+                  .title {
+                    font-size: 1.2rem;
+                    font-weight: 600;
+                    margin-top: 20px;
+                    color: #f8fafc;
+                  }
+                  .spining-disc {
+                    width: 150px;
+                    height: 150px;
+                    border-radius: 50%;
+                    background: conic-gradient(from 0deg, #3b82f6, #1e40af, #3b82f6);
+                    margin: 0 auto;
+                    animation: spin 10s linear infinite;
+                    border: 8px solid #0f172a;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                    position: relative;
+                  }
+                  .spining-disc::after {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 30px;
+                    height: 30px;
+                    background: #0f172a;
+                    border-radius: 50%;
+                  }
+                  @keyframes spin { 100% { transform: rotate(360deg); } }
+                </style>
+              </head>
+              <body>
+                <div class="player-card">
+                  <div class="spining-disc"></div>
+                  <div class="title">Audio Darslik Efirda</div>
+                  <audio controls autoplay src="$_previewUrl"></audio>
+                </div>
+              </body>
+            </html>
+            ''';
+            ctrl.loadHtmlString(htmlContent);
+          } else {
+            ctrl.loadRequest(
+              Uri.parse(_previewUrl.isNotEmpty ? _previewUrl : 'about:blank'),
+            );
+          }
           _webViewCtrl = ctrl;
         }
       }

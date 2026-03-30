@@ -333,11 +333,8 @@ export function PDFReader() {
                   if (isDriveAudio && audioRef.current) {
                     audioRef.current.currentTime = percent * duration;
                   } else {
-                    const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
-                    if (ytIframe && duration > 0) {
-                      ytIframe.contentWindow?.postMessage(JSON.stringify({
-                        event: 'command', func: 'seekTo', args: [percent * duration, true]
-                      }), '*');
+                    if (playerRef.current) {
+                      playerRef.current.seekTo(percent * duration, 'seconds');
                     }
                   }
                 }}>
@@ -350,11 +347,8 @@ export function PDFReader() {
                   if (isDriveAudio && audioRef.current) {
                     audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 15);
                   } else {
-                    const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
-                    if (ytIframe && playedSeconds > 15) {
-                      ytIframe.contentWindow?.postMessage(JSON.stringify({
-                        event: 'command', func: 'seekTo', args: [playedSeconds - 15, true]
-                      }), '*');
+                    if (playerRef.current) {
+                      playerRef.current.seekTo(playedSeconds - 15, 'seconds');
                     }
                   }
                 }} className="p-3 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-full transition-all">
@@ -370,83 +364,7 @@ export function PDFReader() {
                     return;
                   }
 
-                  const container = document.getElementById('yt-player-container');
-                  if (!container) return;
-
-                  if (!isPlaying && !container.querySelector('iframe')) {
-                    // Birinchi marta — iframe'ni yaratamiz autoplay=1 bilan
-                    const iframe = document.createElement('iframe');
-                    iframe.id = 'yt-audio-player';
-                    iframe.src = `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&playsinline=1&enablejsapi=1&rel=0&modestbranding=1&origin=${window.location.origin}`;
-                    iframe.width = '200';
-                    iframe.height = '200';
-                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-                    iframe.style.border = 'none';
-                    iframe.setAttribute('allowfullscreen', '');
-                    container.appendChild(iframe);
-                    setIsPlaying(true);
-
-                    // Progress tracking
-                    const progressInterval = setInterval(() => {
-                      try {
-                        const ytFrame = document.getElementById('yt-audio-player') as HTMLIFrameElement;
-                        if (ytFrame?.contentWindow) {
-                          ytFrame.contentWindow.postMessage(JSON.stringify({
-                            event: 'listening', id: 1
-                          }), '*');
-                        }
-                      } catch (e) { }
-                    }, 1000);
-
-                    // Listen for YouTube messages
-                    const handleMessage = (event: MessageEvent) => {
-                      try {
-                        if (typeof event.data === 'string') {
-                          const data = JSON.parse(event.data);
-                          if (data.event === 'infoDelivery' && data.info) {
-                            if (typeof data.info.currentTime === 'number') {
-                              setPlayedSeconds(data.info.currentTime);
-                            }
-                            if (typeof data.info.duration === 'number' && data.info.duration > 0) {
-                              setDuration(data.info.duration);
-                            }
-                            if (data.info.playerState === 0) { // ENDED
-                              setIsPlaying(false);
-                            }
-                            if (data.info.playerState === 2) { // PAUSED
-                              setIsPlaying(false);
-                            }
-                            if (data.info.playerState === 1) { // PLAYING
-                              setIsPlaying(true);
-                            }
-                          }
-                        }
-                      } catch (e) { }
-                    };
-                    window.addEventListener('message', handleMessage);
-
-                    // Cleanup reference
-                    (container as any)._cleanup = () => {
-                      clearInterval(progressInterval);
-                      window.removeEventListener('message', handleMessage);
-                    };
-                  } else {
-                    // Play/Pause toggle
-                    const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
-                    if (ytIframe?.contentWindow) {
-                      if (isPlaying) {
-                        ytIframe.contentWindow.postMessage(JSON.stringify({
-                          event: 'command', func: 'pauseVideo', args: []
-                        }), '*');
-                        setIsPlaying(false);
-                      } else {
-                        ytIframe.contentWindow.postMessage(JSON.stringify({
-                          event: 'command', func: 'playVideo', args: []
-                        }), '*');
-                        setIsPlaying(true);
-                      }
-                    }
-                  }
+                  setIsPlaying(!isPlaying);
                 }} className="p-4 bg-blue-500 hover:bg-blue-600 text-white shadow-xl shadow-blue-500/30 rounded-full transition-all hover:scale-105">
                   {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current ml-1" />}
                 </button>
@@ -454,11 +372,8 @@ export function PDFReader() {
                   if (isDriveAudio && audioRef.current) {
                     audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + 15);
                   } else {
-                    const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
-                    if (ytIframe) {
-                      ytIframe.contentWindow?.postMessage(JSON.stringify({
-                        event: 'command', func: 'seekTo', args: [playedSeconds + 15, true]
-                      }), '*');
+                    if (playerRef.current) {
+                      playerRef.current.seekTo(playedSeconds + 15, 'seconds');
                     }
                   }
                 }} className="p-3 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-full transition-all">
@@ -467,8 +382,30 @@ export function PDFReader() {
               </div>
             </div>
 
-            {/* YouTube player container - kichik, kartochka pastida, ko'rinmas lekin DOM da bor */}
-            <div id="yt-player-container" className="w-[200px] h-[200px] absolute bottom-0 right-0 overflow-hidden" style={{ opacity: 0.01, pointerEvents: 'none' }} />
+            {/* Hidden ReactPlayer for YouTube Audio */}
+            {isYouTubeEmbed && (
+              <div className="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden">
+                {/* @ts-ignore */}
+                <ReactPlayer
+                  ref={playerRef}
+                  url={`https://www.youtube.com/watch?v=${youtubeVideoId}`}
+                  playing={isPlaying}
+                  controls={false}
+                  playsinline={true}
+                  width="10px"
+                  height="10px"
+                  onProgress={(state: any) => setPlayedSeconds(state.playedSeconds)}
+                  onDuration={(d: number) => setDuration(d)}
+                  onEnded={() => setIsPlaying(false)}
+                  onPause={() => setIsPlaying(false)}
+                  config={{
+                    youtube: {
+                      playerVars: { autoplay: 1, playsinline: 1 }
+                    } as any
+                  }}
+                />
+              </div>
+            )}
           </div>
         ) : (
           <div
