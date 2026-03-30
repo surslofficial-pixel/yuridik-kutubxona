@@ -13,7 +13,14 @@ import {
   Play,
   Pause,
   FastForward,
-  Rewind
+  Rewind,
+  ListMusic,
+  Heart,
+  Plus,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+  Repeat
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReactPlayerDefault from 'react-player';
@@ -294,7 +301,7 @@ export function PDFReader() {
 
 
         {isAudioMode ? (
-          <div className="w-full h-full bg-[#0b1121] sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col items-center justify-center p-6 relative">
+          <div className="w-full h-full bg-gradient-to-b from-[#0e211a] to-[#0A1118] sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col items-center p-6 relative">
             <audio
               ref={audioRef}
               src={isDriveAudio ? previewUrl : undefined}
@@ -305,30 +312,37 @@ export function PDFReader() {
               onEnded={() => setIsPlaying(false)}
               className="hidden"
             />
-            {/* Spinning Cover Art */}
-            <div className={`w-56 h-56 sm:w-72 sm:h-72 rounded-full overflow-hidden shadow-2xl relative border-[6px] sm:border-[8px] border-[#1e293b] transition-all duration-300 ${isPlaying ? 'animate-[spin_20s_linear_infinite]' : ''} mb-8 sm:mb-12 mt-auto`}>
-              <img src={book.cover} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#0b1121] rounded-full shadow-inner border-4 border-[#1e293b]" />
+
+            {/* Minimalist Cover Art Area */}
+            <div className="flex-1 w-full max-w-sm flex flex-col justify-center items-center mt-4">
+              <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] mb-8 transition-transform duration-500 hover:scale-[1.02]">
+                <img src={book.cover} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+              <div className="w-full text-left px-2 mb-6">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white line-clamp-1 mb-1 tracking-tight">{book.title}</h2>
+                <p className="text-slate-400 text-sm sm:text-base font-medium">{book.author || "Audio darslik"}</p>
               </div>
             </div>
 
-            {/* Title and Audio status */}
-            <div className="text-center space-y-3 px-4 w-full max-w-sm mb-auto">
-              <div className="inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full bg-blue-900/30 text-blue-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 border border-blue-900/50 shadow-sm">
-                <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-500 ${isPlaying ? 'animate-pulse' : ''}`} />
-                {isPlaying ? "AUDIO EFIRDA" : "TO'XTATILGAN"}
+            {/* Controls Container matching the Screenshot */}
+            <div className="w-full max-w-sm pb-8 px-2">
+
+              {/* Secondary Actions Row */}
+              <div className="flex items-center justify-between px-2 mb-8 text-white/70">
+                <button className="hover:text-white transition-colors">
+                  <ListMusic className="w-6 h-6" />
+                </button>
+                <button className="hover:text-white transition-colors">
+                  <Heart className="w-6 h-6" />
+                </button>
+                <button className="hover:text-white transition-colors">
+                  <Plus className="w-7 h-7" />
+                </button>
               </div>
-              <h2 className="text-xl sm:text-3xl font-extrabold text-white line-clamp-2 leading-tight tracking-wide">{book.title}</h2>
-              <p className="text-slate-400 text-xs sm:text-sm font-medium italic">Kitob ovozlashtirilgan fonda ijro etilmoqda</p>
 
               {/* Progress Bar */}
-              <div className="w-full pt-6 sm:pt-8 px-2">
-                <div className="w-full flex items-center justify-between text-[10px] sm:text-xs text-slate-500 font-medium mb-2 sm:mb-3">
-                  <span>{formatTime(playedSeconds)}</span>
-                  <span>{formatTime(duration)}</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden relative cursor-pointer group"
+              <div className="w-full mb-6">
+                <div className="w-full h-1 bg-white/20 rounded-full relative cursor-pointer group"
                   onClick={(e) => {
                     const bounds = e.currentTarget.getBoundingClientRect();
                     const x = e.clientX - bounds.left;
@@ -341,12 +355,21 @@ export function PDFReader() {
                       }
                     }
                   }}>
-                  <div className="h-full bg-blue-500 rounded-full transition-all duration-100 group-hover:bg-blue-400" style={{ width: `${duration > 0 ? (playedSeconds / duration) * 100 : 0}%` }} />
+                  <div className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-white rounded-full transition-all duration-100 group-hover:bg-green-400" style={{ width: `${duration > 0 ? (playedSeconds / duration) * 100 : 0}%` }} />
+                  {/* Progress Thumb */}
+                  <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md transition-all duration-100 opacity-0 group-hover:opacity-100" style={{ left: `calc(${duration > 0 ? (playedSeconds / duration) * 100 : 0}% - 6px)` }} />
+                </div>
+                <div className="w-full flex items-center justify-between text-[11px] sm:text-xs text-white/50 font-medium mt-3">
+                  <span>{formatTime(playedSeconds)}</span>
+                  <span>{formatTime(duration)}</span>
                 </div>
               </div>
 
-              {/* Controls */}
-              <div className="flex items-center justify-center gap-8 sm:gap-10 pt-6 sm:pt-8 pb-4">
+              {/* Primary Playback Controls */}
+              <div className="flex items-center justify-between">
+                <button className="text-white/50 hover:text-white transition-colors">
+                  <Shuffle className="w-5 h-5" />
+                </button>
                 <button onClick={() => {
                   if (isDriveAudio && audioRef.current) {
                     audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 15);
@@ -355,8 +378,8 @@ export function PDFReader() {
                       playerRef.current.seekTo(playedSeconds - 15, 'seconds');
                     }
                   }
-                }} className="text-slate-500 hover:text-white transition-colors active:scale-95">
-                  <Rewind className="w-6 h-6 sm:w-7 sm:h-7" />
+                }} className="text-white hover:text-green-400 transition-colors active:scale-95">
+                  <SkipBack className="w-8 h-8 fill-current" />
                 </button>
                 <button onClick={() => {
                   if (isDriveAudio && audioRef.current) {
@@ -368,8 +391,8 @@ export function PDFReader() {
                     return;
                   }
                   setIsPlaying(!isPlaying);
-                }} className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500 hover:bg-blue-400 shadow-[0_0_30px_rgba(59,130,246,0.3)] text-white rounded-full transition-all hover:scale-105 active:scale-95 flex justify-center items-center">
-                  {isPlaying ? <Pause className="w-8 h-8 sm:w-10 sm:h-10 fill-current" /> : <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-current ml-2" />}
+                }} className="text-white hover:text-green-400 hover:scale-105 active:scale-95 transition-all w-16 h-16 flex items-center justify-center">
+                  {isPlaying ? <Pause className="w-12 h-12 fill-current" /> : <Play className="w-12 h-12 fill-current ml-1" />}
                 </button>
                 <button onClick={() => {
                   if (isDriveAudio && audioRef.current) {
@@ -379,8 +402,11 @@ export function PDFReader() {
                       playerRef.current.seekTo(playedSeconds + 15, 'seconds');
                     }
                   }
-                }} className="text-slate-500 hover:text-white transition-colors active:scale-95">
-                  <FastForward className="w-6 h-6 sm:w-7 sm:h-7" />
+                }} className="text-white hover:text-green-400 transition-colors active:scale-95">
+                  <SkipForward className="w-8 h-8 fill-current" />
+                </button>
+                <button className="text-white/50 hover:text-white transition-colors">
+                  <Repeat className="w-5 h-5" />
                 </button>
               </div>
             </div>
