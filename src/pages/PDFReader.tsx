@@ -160,7 +160,12 @@ export function PDFReader() {
         driveViewUrl = previewUrl;
       } else if (fileMatch) {
         const idFromUrl = fileMatch[1];
-        previewUrl = `https://drive.google.com/file/d/${idFromUrl}/preview`;
+        const isAudioBook = foundBook?.categorySlug === 'audio-kitoblar' || foundBook?.category === 'Audio Darslik';
+        if (isAudioBook) {
+          previewUrl = `https://docs.google.com/uc?export=download&id=${idFromUrl}`;
+        } else {
+          previewUrl = `https://drive.google.com/file/d/${idFromUrl}/preview`;
+        }
         driveViewUrl = `https://drive.google.com/file/d/${idFromUrl}/view?usp=sharing`;
       } else {
         previewUrl = rawUrl;

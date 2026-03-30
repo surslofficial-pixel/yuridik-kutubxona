@@ -87,8 +87,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
           _previewUrl =
               'https://drive.google.com/drive/folders/${folderMatch.group(1)}?usp=sharing';
         } else if (fileMatch != null) {
-          _previewUrl =
-              'https://drive.google.com/file/d/${fileMatch.group(1)}/preview';
+          final fileId = fileMatch.group(1)!;
+          if (isAudio && !_isYouTube) {
+            _previewUrl =
+                'https://docs.google.com/uc?export=download&id=$fileId';
+          } else {
+            _previewUrl = 'https://drive.google.com/file/d/$fileId/preview';
+          }
         } else {
           _previewUrl = rawUrl;
         }
