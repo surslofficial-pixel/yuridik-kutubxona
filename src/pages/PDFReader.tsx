@@ -35,6 +35,7 @@ export function PDFReader() {
   const [playedSeconds, setPlayedSeconds] = useState(0);
   const [duration, setDuration] = useState(0);
   const playerRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const formatTime = (seconds: number) => {
     const min = Math.floor(seconds / 60);
@@ -202,6 +203,8 @@ export function PDFReader() {
 
   // Determine if this is a YouTube embed
   const isYouTubeEmbed = previewUrl?.includes('youtube.com/embed');
+  const isDriveAudio = !isYouTubeEmbed && previewUrl?.includes('docs.google.com/uc?export=download');
+  const isAudioMode = isYouTubeEmbed || isDriveAudio;
 
   // YouTube video ID ni oldindan hisoblash
   const youtubeVideoId = book.drive_file_id?.includes('youtube.com')
@@ -288,8 +291,18 @@ export function PDFReader() {
       <main className="flex-1 overflow-hidden p-0 sm:p-4 flex flex-col justify-center items-center gap-4">
 
 
-        {isYouTubeEmbed ? (
+        {isAudioMode ? (
           <div className="w-full flex-1 max-w-sm sm:max-w-md bg-gradient-to-b from-slate-900 to-slate-950 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col items-center justify-center p-8 space-y-6 my-auto relative">
+            <audio
+              ref={audioRef}
+              src={isDriveAudio ? previewUrl : undefined}
+              onTimeUpdate={(e) => setPlayedSeconds(e.currentTarget.currentTime)}
+              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onEnded={() => setIsPlaying(false)}
+              className="hidden"
+            />
             {/* Spinning Cover Art */}
             <div className={`w-48 h-48 sm:w-64 sm:h-64 rounded-full overflow-hidden shadow-2xl relative border-[6px] border-slate-800 transition-all duration-300 ${isPlaying ? 'animate-[spin_15s_linear_infinite]' : ''}`}>
               <img src={book.cover} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -317,11 +330,15 @@ export function PDFReader() {
                   const bounds = e.currentTarget.getBoundingClientRect();
                   const x = e.clientX - bounds.left;
                   const percent = x / bounds.width;
-                  const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
-                  if (ytIframe && duration > 0) {
-                    ytIframe.contentWindow?.postMessage(JSON.stringify({
-                      event: 'command', func: 'seekTo', args: [percent * duration, true]
-                    }), '*');
+                  if (isDriveAudio && audioRef.current) {
+                    audioRef.current.currentTime = percent * duration;
+                  } else {
+                    const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
+                    if (ytIframe && duration > 0) {
+                      ytIframe.contentWindow?.postMessage(JSON.stringify({
+                        event: 'command', func: 'seekTo', args: [percent * duration, true]
+                      }), '*');
+                    }
                   }
                 }}>
                 <div className="h-full bg-blue-500 rounded-full transition-all duration-100" style={{ width: `${duration > 0 ? (playedSeconds / duration) * 100 : 0}%` }} />
@@ -330,16 +347,29 @@ export function PDFReader() {
               {/* Controls */}
               <div className="flex items-center justify-center gap-6 pt-4">
                 <button onClick={() => {
-                  const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
-                  if (ytIframe && playedSeconds > 15) {
-                    ytIframe.contentWindow?.postMessage(JSON.stringify({
-                      event: 'command', func: 'seekTo', args: [playedSeconds - 15, true]
-                    }), '*');
+                  if (isDriveAudio && audioRef.current) {
+                    audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 15);
+                  } else {
+                    const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
+                    if (ytIframe && playedSeconds > 15) {
+                      ytIframe.contentWindow?.postMessage(JSON.stringify({
+                        event: 'command', func: 'seekTo', args: [playedSeconds - 15, true]
+                      }), '*');
+                    }
                   }
                 }} className="p-3 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-full transition-all">
                   <Rewind className="w-6 h-6" />
                 </button>
                 <button onClick={() => {
+                  if (isDriveAudio && audioRef.current) {
+                    if (isPlaying) {
+                      audioRef.current.pause();
+                    } else {
+                      audioRef.current.play().catch(console.error);
+                    }
+                    return;
+                  }
+
                   const container = document.getElementById('yt-player-container');
                   if (!container) return;
 
@@ -421,11 +451,15 @@ export function PDFReader() {
                   {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current ml-1" />}
                 </button>
                 <button onClick={() => {
-                  const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
-                  if (ytIframe) {
-                    ytIframe.contentWindow?.postMessage(JSON.stringify({
-                      event: 'command', func: 'seekTo', args: [playedSeconds + 15, true]
-                    }), '*');
+                  if (isDriveAudio && audioRef.current) {
+                    audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + 15);
+                  } else {
+                    const ytIframe = document.getElementById('yt-audio-player') as HTMLIFrameElement;
+                    if (ytIframe) {
+                      ytIframe.contentWindow?.postMessage(JSON.stringify({
+                        event: 'command', func: 'seekTo', args: [playedSeconds + 15, true]
+                      }), '*');
+                    }
                   }
                 }} className="p-3 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-full transition-all">
                   <FastForward className="w-6 h-6" />

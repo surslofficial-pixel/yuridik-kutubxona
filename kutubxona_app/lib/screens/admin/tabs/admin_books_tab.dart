@@ -64,17 +64,20 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                 if (res.statusCode == 200) {
                   final data = jsonDecode(res.body);
                   setStateBuilder(() {
-                    if (titleCtrl.text.isEmpty)
+                    if (titleCtrl.text.isEmpty) {
                       titleCtrl.text = data['title'] ?? '';
-                    if (authorCtrl.text.isEmpty)
+                    }
+                    if (authorCtrl.text.isEmpty) {
                       authorCtrl.text = data['author_name'] ?? '';
+                    }
                     if (coverCtrl.text.isEmpty) {
                       coverCtrl.text =
                           data['thumbnail_url'] ??
                           'https://img.youtube.com/vi/$ytId/hqdefault.jpg';
                     }
-                    if (yearCtrl.text.isEmpty)
+                    if (yearCtrl.text.isEmpty) {
                       yearCtrl.text = DateTime.now().year.toString();
+                    }
                     if (dateCtrl.text.isEmpty) {
                       dateCtrl.text = DateTime.now()
                           .toIso8601String()
@@ -194,7 +197,7 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                               category = cats.first.name;
                             }
                             return DropdownButtonFormField<String>(
-                              value: category,
+                              initialValue: category,
                               items: cats
                                   .map(
                                     (c) => DropdownMenuItem(
@@ -298,7 +301,7 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<String>(
-                                value: format,
+                                initialValue: format,
                                 items: ['PDF', 'Audio']
                                     .map(
                                       (f) => DropdownMenuItem(
@@ -326,7 +329,7 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: DropdownButtonFormField<String>(
-                                value: language,
+                                initialValue: language,
                                 items: ['O\'zbek', 'Rus', 'Ingliz']
                                     .map(
                                       (l) => DropdownMenuItem(
