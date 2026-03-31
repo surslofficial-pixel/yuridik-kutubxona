@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/book.dart';
 import '../models/category.dart';
 import '../models/ai_topic.dart';
@@ -212,4 +213,26 @@ class FirebaseService {
       await doc.reference.update(newIdentity);
     }
   }
+
+  // === APP ANALYTICS ===
+  Future<void> logAppInstallation() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+      if (isFirstLaunch) {
+        await _db.collection('stats').doc('app_info').set({
+          'downloads_count': FieldValue.increment(1),
+        }, SetOptions(merge: true));
+        await prefs.setBool('isFirstLaunch', false);
+      }
+    } catch (_) {
+      // Safely ignore if prefs or network fails on first launch
+    }
+  }
+
+  Stream<int> get downloadsCountStream => _db
+      .collection('stats')
+      .doc('app_info')
+      .snapshots()
+      .map((snap) => (snap.data()?['downloads_count'] as int?) ?? 0);
 }

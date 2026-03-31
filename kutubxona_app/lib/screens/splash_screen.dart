@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../main.dart';
+import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -32,6 +33,9 @@ class _SplashScreenState extends State<SplashScreen>
         systemNavigationBarIconBrightness: Brightness.light,
       ),
     );
+
+    // Track unique app installation counter across Firebase
+    FirebaseService().logAppInstallation();
 
     _controller = AnimationController(
       vsync: this,
@@ -154,41 +158,31 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                     children: [
                       Text(
-                        'SURXONDARYO YURIDIK',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 3.0,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'TEXNIKUMI',
+                        'SURXONDARYO YURIDIK TEXNIKUMI',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                           color: Colors.white,
-                          fontSize: 32,
+                          fontSize: 22,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 1.5,
+                          height: 1.3,
                         ),
                       ),
                       const SizedBox(height: 16),
                       Container(
-                        width: 40,
+                        width: 60,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryLight,
+                          color: AppTheme.primaryBlue,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Elektron Kutubxona',
+                        'Elektron Kutubxonasi Ilovasi',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
-                          color: Colors.blue[200],
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 1.0,

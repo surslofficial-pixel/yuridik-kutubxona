@@ -51,6 +51,10 @@ class AdminOverviewTab extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
+          // Real-time downloads count
+          _buildDownloadsCounter(),
+          const SizedBox(height: 24),
+
           // Stats grid
           _buildStatsGrid(),
           const SizedBox(height: 24),
@@ -115,6 +119,73 @@ class AdminOverviewTab extends StatelessWidget {
           _buildRecentSessions(),
         ],
       ),
+    );
+  }
+
+  Widget _buildDownloadsCounter() {
+    return StreamBuilder<int>(
+      stream: _fb.downloadsCountStream,
+      builder: (context, snapshot) {
+        final count = snapshot.data ?? 0;
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF8B5CF6), Color(0xFFC084FC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.download_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ilovani yuklab olganlar',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$count nafar',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
