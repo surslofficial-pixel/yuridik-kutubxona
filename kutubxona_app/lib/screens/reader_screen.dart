@@ -597,34 +597,42 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 }
                               },
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                if (_ytPlaying) {
-                                  _ytController!.pauseVideo();
-                                } else {
-                                  _ytController!.playVideo();
-                                }
-                              },
-                              child: Container(
-                                width: 72,
-                                height: 72,
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.primaryBlue,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black26,
-                                      blurRadius: 10,
-                                      offset: Offset(0, 4),
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Container(
+                                  width: 72,
+                                  height: 72,
+                                  decoration: const BoxDecoration(
+                                    color: AppTheme.primaryBlue,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 10,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    _ytPlaying ? Icons.pause : Icons.play_arrow,
+                                    color: Colors.white,
+                                    size: 42,
+                                  ),
+                                ),
+                                // Invisible YouTube iframe intercepts the native tap
+                                // to allow playback on strict mobile webviews!
+                                SizedBox(
+                                  width: 72,
+                                  height: 72,
+                                  child: Opacity(
+                                    opacity: 0.01,
+                                    child: YoutubePlayer(
+                                      controller: _ytController!,
                                     ),
-                                  ],
+                                  ),
                                 ),
-                                child: Icon(
-                                  _ytPlaying ? Icons.pause : Icons.play_arrow,
-                                  color: Colors.white,
-                                  size: 42,
-                                ),
-                              ),
+                              ],
                             ),
                             IconButton(
                               icon: const Icon(Icons.skip_next),
@@ -646,20 +654,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   ),
                 ],
               ),
-            ),
-          ),
-        ),
-        // YouTube iframe ON TOP of the opaque gradient, which avoids Chromium's occlusion detection.
-        // Opacity 0.01 makes it practically invisible while preventing the WebView from pausing.
-        Positioned(
-          left: 0,
-          top: 0,
-          width: 320,
-          height: 240,
-          child: Opacity(
-            opacity: 0.01,
-            child: IgnorePointer(
-              child: YoutubePlayer(controller: _ytController!),
             ),
           ),
         ),
