@@ -4,7 +4,7 @@ import '../models/book.dart';
 import '../models/category.dart';
 import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/book_card.dart';
+import '../widgets/book_list_tile.dart';
 import '../widgets/category_card.dart';
 import '../widgets/smooth_page_route.dart';
 import 'book_details_screen.dart';
@@ -197,22 +197,16 @@ class _CatalogScreenState extends State<CatalogScreen> {
               else
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.48,
-                        ),
-                    delegate: SliverChildBuilderDelegate((context, i) {
+                  sliver: SliverList.builder(
+                    itemCount: filteredBooks.length,
+                    itemBuilder: (context, i) {
                       final book = filteredBooks[i];
                       final catGroup = categories
                           .where((c) => c.slug == book.categorySlug)
                           .firstOrNull
                           ?.group;
                       final isAudio = catGroup == 'audio';
-                      return BookCard(
+                      return BookListTile(
                         book: book,
                         isAudio: isAudio,
                         onTap: () => Navigator.push(
@@ -222,7 +216,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                           ),
                         ),
                       );
-                    }, childCount: filteredBooks.length),
+                    },
                   ),
                 ),
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
