@@ -46,7 +46,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Duration _ytPosition = Duration.zero;
   Duration _ytDuration = Duration.zero;
   Timer? _ytProgressTimer;
-  bool _hasPlayedOnce = false;
 
   // URLs
   String _previewUrl = '';
@@ -125,9 +124,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (_isYouTube) {
       _ytController = YoutubePlayerController.fromVideoId(
         videoId: _youtubeVideoId,
-        autoPlay: false,
+        autoPlay: true,
         params: const YoutubePlayerParams(
-          showControls: true,
+          showControls: false,
           showFullscreenButton: false,
           mute: false,
           playsInline: true,
@@ -138,7 +137,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
         if (mounted) {
           setState(() {
             _ytPlaying = event.playerState == PlayerState.playing;
-            if (_ytPlaying) _hasPlayedOnce = true;
           });
         }
       });
@@ -690,54 +688,26 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           );
                         },
                       ),
-                      ClipOval(
-                        child: SizedBox(
+                      // Play/Pause button - directly controls the YouTube controller
+                      GestureDetector(
+                        onTap: () {
+                          if (_ytPlaying) {
+                            _ytController!.pauseVideo();
+                          } else {
+                            _ytController!.playVideo();
+                          }
+                        },
+                        child: Container(
                           width: 64,
                           height: 64,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // 1) Bottom Layer: Fully Opaque YoutubePlayer
-                              // Placed under the blue button so Android accepts taps without Opacity < 0.1 clickjacking blocks.
-                              OverflowBox(
-                                maxWidth: 200,
-                                maxHeight: 200,
-                                child: YoutubePlayer(
-                                  controller: _ytController!,
-                                ),
-                              ),
-                              // 2) Top Layer: Blue Play Button
-                              // When _hasPlayedOnce == false, it ignores pointers, letting the tap fall through to YouTube!
-                              // When _hasPlayedOnce == true, it catches pointers and triggers Dart pause/play!
-                              IgnorePointer(
-                                ignoring:
-                                    !_hasPlayedOnce, // Ignore taps until YT video successfully plays once
-                                child: GestureDetector(
-                                  onTap: () {
-                                    if (_ytPlaying) {
-                                      _ytController!.pauseVideo();
-                                    } else {
-                                      _ytController!.playVideo();
-                                    }
-                                  },
-                                  child: Container(
-                                    width: 64,
-                                    height: 64,
-                                    decoration: const BoxDecoration(
-                                      color: AppTheme.primaryBlue,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      _ytPlaying
-                                          ? Icons.pause
-                                          : Icons.play_arrow,
-                                      color: Colors.white,
-                                      size: 36,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primaryBlue,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _ytPlaying ? Icons.pause : Icons.play_arrow,
+                            color: Colors.white,
+                            size: 36,
                           ),
                         ),
                       ),
@@ -755,35 +725,16 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  if (_isYouTube)
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        // Open directly in native YouTube app
-                        final url = Uri.parse(
-                          'https://www.youtube.com/watch?v=$_youtubeVideoId',
-                        );
-                        launchUrl(url, mode: LaunchMode.externalApplication);
-                      },
-                      icon: const Icon(Icons.open_in_new, size: 16),
-                      label: const Text(
-                        "YouTube'da ochish (Agar xato bersa)",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white.withValues(alpha: 0.6),
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.15),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                      ),
+                  const SizedBox(height: 8),
+                  // Hidden YouTube player (offstage but still active for audio playback)
+                  SizedBox(
+                    width: 1,
+                    height: 1,
+                    child: Opacity(
+                      opacity: 0.01,
+                      child: YoutubePlayer(controller: _ytController!),
                     ),
+                  ),
                   const SizedBox(height: 12),
                 ],
               ),
