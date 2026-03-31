@@ -50,6 +50,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   // URLs
   String _previewUrl = '';
+  double _currentZoom = 1.0;
 
   bool get _isSupportedPlatform {
     if (kIsWeb) return true;
@@ -256,13 +257,31 @@ class _ReaderScreenState extends State<ReaderScreen> {
             ctrl.setNavigationDelegate(
               NavigationDelegate(
                 onPageFinished: (url) {
-                  // Forceful CSS and Meta injection for PDF Zoom and Icon removal
+                  // Bulletproof JS Injection via setInterval to kill Pop-out icon and enforce zoom
                   ctrl.runJavaScript(
-                    "var style = document.createElement('style');"
-                    "style.type = 'text/css';"
-                    "style.innerHTML = '.ndfHFb-c4YZDc-Wrql6b, a[title=\"Pop-out\"], a[aria-label=\"Pop-out\"], .ndfHFb-c4YZDc-GSQQnc-LgbsSe { display:none !important; visibility:hidden !important; } body, html, * { touch-action: auto !important; }';"
-                    "document.head.appendChild(style);"
-                    "document.querySelector('meta[name=\"viewport\"]')?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=5.0, user-scalable=yes');",
+                    "const enforceHacks = () => {"
+                    "  let meta = document.querySelector('meta[name=\"viewport\"]');"
+                    "  if (!meta) {"
+                    "    meta = document.createElement('meta');"
+                    "    meta.name = 'viewport';"
+                    "    document.head.appendChild(meta);"
+                    "  }"
+                    "  meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');"
+                    "  const classes = ['.ndfHFb-c4YZDc-Wrql6b', '.ndfHFb-c4YZDc-GSQQnc-LgbsSe'];"
+                    "  classes.forEach(c => {"
+                    "    let el = document.querySelector(c);"
+                    "    if(el) el.style.setProperty('display', 'none', 'important');"
+                    "  });"
+                    "  const paths = document.querySelectorAll('path');"
+                    "  for (let p of paths) {"
+                    "    if (p.getAttribute('d') && p.getAttribute('d').includes('M19 19H5V5h7V3H5a2 2')) {"
+                    "      let btn = p.closest('div[role=\"button\"]') || p.closest('a');"
+                    "      if (btn) btn.style.setProperty('display', 'none', 'important');"
+                    "    }"
+                    "  }"
+                    "};"
+                    "setInterval(enforceHacks, 1000);"
+                    "enforceHacks();",
                   );
                 },
               ),
@@ -405,7 +424,54 @@ class _ReaderScreenState extends State<ReaderScreen> {
       }
       return buildIframeWebView(_previewUrl);
     }
-    return WebViewWidget(controller: _webViewCtrl!);
+
+    final webViewWidget = WebViewWidget(controller: _webViewCtrl!);
+    if (_isYouTube) return webViewWidget;
+
+    return Stack(
+      children: [
+        webViewWidget,
+        if (!_isYouTube)
+          Positioned(
+            right: 16,
+            bottom: 30,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'zoomInBtn',
+                  backgroundColor: AppTheme.primaryBlue.withValues(alpha: 0.8),
+                  shape: const CircleBorder(),
+                  elevation: 4,
+                  child: const Icon(Icons.zoom_in, color: Colors.white),
+                  onPressed: () {
+                    setState(() => _currentZoom += 0.25);
+                    _webViewCtrl?.runJavaScript(
+                      "document.body.style.zoom = '$_currentZoom';",
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                FloatingActionButton.small(
+                  heroTag: 'zoomOutBtn',
+                  backgroundColor: AppTheme.primaryBlue.withValues(alpha: 0.8),
+                  shape: const CircleBorder(),
+                  elevation: 4,
+                  child: const Icon(Icons.zoom_out, color: Colors.white),
+                  onPressed: () {
+                    if (_currentZoom > 0.5) {
+                      setState(() => _currentZoom -= 0.25);
+                      _webViewCtrl?.runJavaScript(
+                        "document.body.style.zoom = '$_currentZoom';",
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildYouTubePlayer() {
