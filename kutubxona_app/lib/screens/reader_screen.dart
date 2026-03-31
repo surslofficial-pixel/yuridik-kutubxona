@@ -130,6 +130,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
           showFullscreenButton: false,
           mute: false,
           playsInline: true,
+          origin: 'https://www.youtube.com',
         ),
       );
       _ytController!.listen((event) {
@@ -255,20 +256,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
             ctrl.setNavigationDelegate(
               NavigationDelegate(
                 onPageFinished: (url) {
-                  // Enable pinch-to-zoom
+                  // Forceful CSS and Meta injection for PDF Zoom and Icon removal
                   ctrl.runJavaScript(
-                    "document.querySelector('meta[name=\"viewport\"]')?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=5.0, user-scalable=yes');"
-                    // Hide Google Drive pop-out icons
-                    "const t = setInterval(function() {"
-                    "  const a = document.querySelector('.ndfHFb-c4YZDc-Wrql6b');"
-                    "  const b = document.querySelector('a[title=\"Pop-out\"]');"
-                    "  const c = document.querySelector('a[aria-label=\"Pop-out\"]');"
-                    "  if(a) a.style.display = 'none';"
-                    "  if(b) b.style.display = 'none';"
-                    "  if(c) c.style.display = 'none';"
-                    "  if(a || b || c) clearInterval(t);"
-                    "}, 500);"
-                    "setTimeout(() => clearInterval(t), 5000);", // safety timeout
+                    "var style = document.createElement('style');"
+                    "style.type = 'text/css';"
+                    "style.innerHTML = '.ndfHFb-c4YZDc-Wrql6b, a[title=\"Pop-out\"], a[aria-label=\"Pop-out\"], .ndfHFb-c4YZDc-GSQQnc-LgbsSe { display:none !important; visibility:hidden !important; } body, html, * { touch-action: auto !important; }';"
+                    "document.head.appendChild(style);"
+                    "document.querySelector('meta[name=\"viewport\"]')?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=5.0, user-scalable=yes');",
                   );
                 },
               ),
@@ -630,52 +624,49 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           );
                         },
                       ),
-                      ClipRect(
+                      ClipOval(
                         child: SizedBox(
                           width: 64,
                           height: 64,
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              GestureDetector(
-                                onTap: () {
-                                  if (_ytPlaying) {
-                                    _ytController!.pauseVideo();
-                                  } else {
-                                    _ytController!.playVideo();
-                                  }
-                                },
-                                child: Container(
-                                  width: 64,
-                                  height: 64,
-                                  decoration: const BoxDecoration(
-                                    color: AppTheme.primaryBlue,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black26,
-                                        blurRadius: 10,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    _ytPlaying ? Icons.pause : Icons.play_arrow,
-                                    color: Colors.white,
-                                    size: 36,
-                                  ),
+                              // 1) Bottom Layer: Fully Opaque YoutubePlayer
+                              // Placed under the blue button so Android accepts taps without Opacity < 0.1 clickjacking blocks.
+                              OverflowBox(
+                                maxWidth: 200,
+                                maxHeight: 200,
+                                child: YoutubePlayer(
+                                  controller: _ytController!,
                                 ),
                               ),
-                              // YouTube iframe capturing native tap
+                              // 2) Top Layer: Blue Play Button
+                              // When _hasPlayedOnce == false, it ignores pointers, letting the tap fall through to YouTube!
+                              // When _hasPlayedOnce == true, it catches pointers and triggers Dart pause/play!
                               IgnorePointer(
-                                ignoring: _hasPlayedOnce,
-                                child: OverflowBox(
-                                  maxWidth: 200,
-                                  maxHeight: 200,
-                                  child: Opacity(
-                                    opacity: 0.01,
-                                    child: YoutubePlayer(
-                                      controller: _ytController!,
+                                ignoring:
+                                    !_hasPlayedOnce, // Ignore taps until YT video successfully plays once
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (_ytPlaying) {
+                                      _ytController!.pauseVideo();
+                                    } else {
+                                      _ytController!.playVideo();
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: const BoxDecoration(
+                                      color: AppTheme.primaryBlue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      _ytPlaying
+                                          ? Icons.pause
+                                          : Icons.play_arrow,
+                                      color: Colors.white,
+                                      size: 36,
                                     ),
                                   ),
                                 ),
