@@ -507,10 +507,11 @@ class AdminOverviewTab extends StatelessWidget {
     return StreamBuilder<List<Book>>(
       stream: _fb.booksStream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(
             child: CircularProgressIndicator(color: AppTheme.primaryDark),
           );
+        }
         final books = List<Book>.from(snapshot.data!);
         books.sort((a, b) => b.viewCount.compareTo(a.viewCount));
         final topBooks = books.take(5).toList();
@@ -581,10 +582,11 @@ class AdminOverviewTab extends StatelessWidget {
     return StreamBuilder<List<Book>>(
       stream: _fb.booksStream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(
             child: CircularProgressIndicator(color: AppTheme.primaryDark),
           );
+        }
         final books = snapshot.data!;
 
         final authorViews = <String, int>{};

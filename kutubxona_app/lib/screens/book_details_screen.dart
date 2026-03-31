@@ -107,6 +107,8 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
     final codeCtrl = TextEditingController();
     bool isVerifying = false;
     String? errorText;
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
 
     showDialog(
       context: context,
@@ -166,12 +168,12 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                       );
                       setStateDialog(() => isVerifying = false);
 
-                      if (!context.mounted) return;
+                      if (!mounted) return;
 
                       if (success) {
-                        Navigator.pop(ctx);
+                        navigator.pop();
                         _checkUnlocked();
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        scaffoldMessenger.showSnackBar(
                           const SnackBar(
                             content: Text('✅ Kitob muvaffaqiyatli ochildi!'),
                             backgroundColor: Colors.green,
