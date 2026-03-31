@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../models/book.dart';
 import '../../../services/firebase_service.dart';
 import '../../../theme/app_theme.dart';
 
@@ -60,65 +61,69 @@ class AdminOverviewTab extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Active readers
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.people_rounded,
-                  color: Colors.green,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'Hozir o\'qiyotganlar',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-            ],
+          _buildSectionHeader(
+            Icons.people_rounded,
+            Colors.green,
+            'Hozir o\'qiyotganlar',
           ),
           const SizedBox(height: 12),
           _buildActiveReaders(),
           const SizedBox(height: 24),
 
+          // Top books
+          _buildSectionHeader(
+            Icons.trending_up_rounded,
+            Colors.orange,
+            'Eng ko\'p o\'qilgan kitoblar',
+          ),
+          const SizedBox(height: 12),
+          _buildTopBooks(),
+          const SizedBox(height: 24),
+
+          // Top authors
+          _buildSectionHeader(
+            Icons.star_rounded,
+            Colors.amber.shade600,
+            'Top Mualliflar',
+          ),
+          const SizedBox(height: 12),
+          _buildTopAuthors(),
+          const SizedBox(height: 24),
+
           // Recent sessions
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryDark.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.history_rounded,
-                  color: AppTheme.primaryDark,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'So\'nggi sessiyalar',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-            ],
+          _buildSectionHeader(
+            Icons.history_rounded,
+            AppTheme.primaryDark,
+            'So\'nggi sessiyalar',
           ),
           const SizedBox(height: 12),
           _buildRecentSessions(),
         ],
       ),
+    );
+  }
+
+  Widget _buildSectionHeader(IconData icon, Color color, String title) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 
@@ -493,6 +498,155 @@ class AdminOverviewTab extends StatelessWidget {
               ),
             );
           }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildTopBooks() {
+    return StreamBuilder<List<Book>>(
+      stream: _fb.booksStream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData)
+          return const Center(
+            child: CircularProgressIndicator(color: AppTheme.primaryDark),
+          );
+        final books = List<Book>.from(snapshot.data!);
+        books.sort((a, b) => b.viewCount.compareTo(a.viewCount));
+        final topBooks = books.take(5).toList();
+
+        if (topBooks.isEmpty || topBooks.first.viewCount == 0) {
+          return const Text(
+            'Hali o\'qilgan kitoblar yo\'q',
+            style: TextStyle(color: Colors.grey),
+          );
+        }
+
+        return Column(
+          children: topBooks
+              .where((b) => b.viewCount > 0)
+              .map(
+                (b) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.borderLight),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.auto_graph_rounded,
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          b.title,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${b.viewCount} marta',
+                          style: const TextStyle(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildTopAuthors() {
+    return StreamBuilder<List<Book>>(
+      stream: _fb.booksStream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData)
+          return const Center(
+            child: CircularProgressIndicator(color: AppTheme.primaryDark),
+          );
+        final books = snapshot.data!;
+
+        final authorViews = <String, int>{};
+        for (var b in books) {
+          if (b.author.isNotEmpty) {
+            authorViews[b.author] = (authorViews[b.author] ?? 0) + b.viewCount;
+          }
+        }
+
+        var sortedAuthors = authorViews.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+        final topAuthors = sortedAuthors.take(5).toList();
+
+        if (topAuthors.isEmpty || topAuthors.first.value == 0) {
+          return const Text(
+            'Hali statistika yo\'q',
+            style: TextStyle(color: Colors.grey),
+          );
+        }
+
+        return Column(
+          children: topAuthors
+              .where((e) => e.value > 0)
+              .map(
+                (e) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.borderLight),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.amber.withValues(alpha: 0.2),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          color: Colors.amber,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          e.key,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Text(
+                        '${e.value} o\'qish',
+                        style: const TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
         );
       },
     );

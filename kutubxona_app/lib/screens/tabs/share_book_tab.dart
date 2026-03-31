@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../services/firebase_service.dart';
 import '../../theme/app_theme.dart';
 
@@ -14,57 +16,83 @@ class _ShareBookTabState extends State<ShareBookTab> {
   final _firebase = FirebaseService();
   final _titleCtrl = TextEditingController();
   final _authorCtrl = TextEditingController();
-  final _linkCtrl = TextEditingController();
   final _senderCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
-  String _selectedCategory = 'Huquqshunoslik';
+  final _categoryCtrl = TextEditingController();
   bool _isSending = false;
   bool _sent = false;
-
-  final _categories = [
-    'Huquqshunoslik',
-    'Iqtisodiyot',
-    'Tarix',
-    'Adabiyot',
-    'Informatika',
-    'Pedagogika',
-    'Boshqa',
-  ];
+  File? _selectedFile;
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _authorCtrl.dispose();
-    _linkCtrl.dispose();
     _senderCtrl.dispose();
     _descCtrl.dispose();
+    _categoryCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'epub', 'doc', 'docx'],
+    );
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _selectedFile = File(result.files.single.path!);
+      });
+    }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Iltimos, kitob faylini (PDF, EPUB yoku DOC) tanlang.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSending = true);
 
     try {
+      final uploadedUrl = await _firebase.uploadBookFile(
+        _selectedFile!,
+        'user_submissions',
+      );
+
+      if (uploadedUrl == null) {
+        throw Exception("Fayl yuklashda xatolik yuz berdi");
+      }
+
       await _firebase.submitAuthorBook({
         'title': _titleCtrl.text.trim(),
         'author': _authorCtrl.text.trim(),
-        'driveUrl': _linkCtrl.text.trim(),
+        'driveUrl': uploadedUrl,
         'senderName': _senderCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
-        'category': _selectedCategory,
-        'categorySlug': _selectedCategory.toLowerCase().replaceAll(' ', '-'),
+        'category': _categoryCtrl.text.trim(),
+        'categorySlug': _categoryCtrl.text.trim().toLowerCase().replaceAll(
+          ' ',
+          '-',
+        ),
       });
       if (mounted) {
         setState(() {
           _isSending = false;
           _sent = true;
+          _selectedFile = null;
         });
         _titleCtrl.clear();
         _authorCtrl.clear();
-        _linkCtrl.clear();
         _senderCtrl.clear();
         _descCtrl.clear();
+        _categoryCtrl.clear();
       }
     } catch (e) {
       if (mounted) {
@@ -289,19 +317,8 @@ class _ShareBookTabState extends State<ShareBookTab> {
                   v == null || v.trim().isEmpty ? 'Muallifni kiriting' : null,
             ),
             const SizedBox(height: 16),
-            _buildTextField(
-              controller: _linkCtrl,
-              label: 'Kitob havolasi (Google Drive, link)',
-              hint: 'https://drive.google.com/...',
-              icon: Icons.link_rounded,
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Havolani kiriting' : null,
-            ),
-            const SizedBox(height: 16),
-
-            // Category dropdown
             const Text(
-              'Kategoriya',
+              'Kitob fayli',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -309,25 +326,67 @@ class _ShareBookTabState extends State<ShareBookTab> {
               ),
             ),
             const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.borderLight),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _selectedCategory,
-                  isExpanded: true,
-                  items: _categories
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedCategory = v!),
-                ),
-              ),
+            _selectedFile != null
+                ? Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFF86EFAC)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.description_rounded,
+                          color: Color(0xFF22C55E),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _selectedFile!.path.split('/').last,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF166534),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          onPressed: () => setState(() => _selectedFile = null),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  )
+                : OutlinedButton.icon(
+                    onPressed: _pickFile,
+                    icon: const Icon(Icons.upload_file_rounded),
+                    label: const Text('Qurilmadan fayl tanlash'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      foregroundColor: AppTheme.primaryDark,
+                      side: const BorderSide(color: AppTheme.primaryDark),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _categoryCtrl,
+              label: 'Kategoriya',
+              hint: 'Masalan: Huquqshunoslik',
+              icon: Icons.category_rounded,
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? 'Kategoriyani kiriting'
+                  : null,
             ),
-
             const SizedBox(height: 16),
             _buildTextField(
               controller: _descCtrl,
@@ -395,15 +454,17 @@ class _ShareBookTabState extends State<ShareBookTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textSecondary,
+        if (label.isNotEmpty) ...[
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textSecondary,
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
+          const SizedBox(height: 6),
+        ],
         TextFormField(
           controller: controller,
           validator: validator,

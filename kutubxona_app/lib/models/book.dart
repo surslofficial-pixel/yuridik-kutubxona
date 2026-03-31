@@ -46,6 +46,9 @@ class Book {
   final String? size;
   final double rating;
   final int ratingCount;
+  final bool isPremium;
+  final int price;
+  final int viewCount;
 
   Book({
     required this.id,
@@ -64,6 +67,9 @@ class Book {
     this.size,
     this.rating = 0.0,
     this.ratingCount = 0,
+    this.isPremium = false,
+    this.price = 0,
+    this.viewCount = 0,
   });
 
   factory Book.fromMap(Map<String, dynamic> data) {
@@ -94,6 +100,9 @@ class Book {
       size: data['size'],
       rating: (data['rating'] ?? 0.0).toDouble(),
       ratingCount: data['ratingCount'] ?? 0,
+      isPremium: data['isPremium'] ?? false,
+      price: data['price'] ?? 0,
+      viewCount: data['viewCount'] ?? 0,
     );
   }
 
@@ -116,6 +125,9 @@ class Book {
     if (size != null) map['size'] = size;
     map['rating'] = rating;
     map['ratingCount'] = ratingCount;
+    map['isPremium'] = isPremium;
+    map['price'] = price;
+    map['viewCount'] = viewCount;
     return map;
   }
 }

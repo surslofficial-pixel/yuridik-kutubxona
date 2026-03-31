@@ -242,8 +242,8 @@ class _MainShellState extends State<MainShell> {
     CatalogScreen(),
     AiLawScreen(),
     AiChatScreen(),
-    AboutScreen(),
     ShareBookTab(),
+    AboutScreen(),
   ];
 
   final _titles = const [
@@ -251,14 +251,14 @@ class _MainShellState extends State<MainShell> {
     'Katalog',
     'AI & Huquq',
     'AI Kutubxonachi',
-    'Dastur haqida',
     'Mualliflar',
+    'Dastur haqida',
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: (_currentIndex == 3 || _currentIndex == 5)
+      appBar: (_currentIndex == 3 || _currentIndex == 4)
           ? null
           : AppBar(title: Text(_titles[_currentIndex]), centerTitle: false),
       body: IndexedStack(index: _currentIndex, children: _pages),
@@ -309,17 +309,17 @@ class _MainShellState extends State<MainShell> {
                 ),
                 _navItem(
                   4,
-                  LucideIcons.info,
-                  LucideIcons.info,
-                  'Haqida',
-                  const Color(0xFF6366F1),
-                ),
-                _navItem(
-                  5,
                   LucideIcons.penTool,
                   LucideIcons.penTool,
                   'Mualliflar',
                   const Color(0xFF7C3AED),
+                ),
+                _navItem(
+                  5,
+                  LucideIcons.info,
+                  LucideIcons.info,
+                  'Haqida',
+                  const Color(0xFF6366F1),
                 ),
               ],
             ),

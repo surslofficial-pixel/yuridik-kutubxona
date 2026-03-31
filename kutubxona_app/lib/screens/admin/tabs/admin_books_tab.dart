@@ -5,7 +5,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import '../../../models/book.dart';
-import '../../../models/category.dart';
 import '../../../services/firebase_service.dart';
 import '../../../theme/app_theme.dart';
 
@@ -32,7 +31,7 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
   void _showBookDialog([Book? book]) {
     final titleCtrl = TextEditingController(text: book?.title ?? '');
     final authorCtrl = TextEditingController(text: book?.author ?? '');
-    String category = book?.category ?? 'Biznes huquqi';
+    final categoryCtrl = TextEditingController(text: book?.category ?? '');
     final coverCtrl = TextEditingController(text: book?.cover ?? '');
     final driveLinkCtrl = TextEditingController(
       text: book?.fileId != null
@@ -44,6 +43,12 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
     final yearCtrl = TextEditingController(text: book?.year?.toString() ?? '');
     final dateCtrl = TextEditingController(text: book?.date ?? '');
     final sizeCtrl = TextEditingController(text: book?.size ?? '');
+
+    bool isPremium = book?.isPremium ?? false;
+    final priceCtrl = TextEditingController(
+      text: book != null && book.price > 0 ? book.price.toString() : '',
+    );
+
     bool isUploading = false;
 
     showModalBottomSheet(
@@ -187,41 +192,11 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                         const SizedBox(height: 14),
                         _formField('Muallif', authorCtrl, Icons.person_rounded),
                         const SizedBox(height: 14),
-                        // Category dropdown
-                        StreamBuilder<List<Category>>(
-                          stream: _fb.categoriesStream,
-                          builder: (context, snap) {
-                            final cats = snap.data ?? [];
-                            if (cats.isEmpty) return const SizedBox();
-                            if (!cats.any((c) => c.name == category)) {
-                              category = cats.first.name;
-                            }
-                            return DropdownButtonFormField<String>(
-                              initialValue: category,
-                              items: cats
-                                  .map(
-                                    (c) => DropdownMenuItem(
-                                      value: c.name,
-                                      child: Text(c.name),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (v) =>
-                                  setStateBuilder(() => category = v!),
-                              decoration: InputDecoration(
-                                labelText: 'Kategoriya',
-                                prefixIcon: const Icon(
-                                  Icons.category_rounded,
-                                  size: 20,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                filled: true,
-                                fillColor: Colors.grey.shade50,
-                              ),
-                            );
-                          },
+                        // Category text field
+                        _formField(
+                          'Kategoriya *',
+                          categoryCtrl,
+                          Icons.category_rounded,
                         ),
                         const SizedBox(height: 14),
                         _formField(
@@ -379,6 +354,32 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                           ],
                         ),
                         const SizedBox(height: 14),
+                        // Premium setting
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: isPremium,
+                              onChanged: (v) =>
+                                  setStateBuilder(() => isPremium = v ?? false),
+                              activeColor: Colors.amber,
+                            ),
+                            const Text(
+                              'Premium kitob',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 16),
+                            if (isPremium)
+                              Expanded(
+                                child: _formField(
+                                  'Narxi (so\'m)',
+                                  priceCtrl,
+                                  Icons.attach_money_rounded,
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
                         _formField(
                           'Sana (YYYY-MM-DD)',
                           dateCtrl,
@@ -441,12 +442,12 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                                   DateTime.now().millisecondsSinceEpoch
                                       .toString(),
                               title: titleCtrl.text,
-                              author: authorCtrl.text,
-                              category: category,
-                              categorySlug: category.toLowerCase().replaceAll(
-                                ' ',
-                                '-',
-                              ),
+                              author: authorCtrl.text.trim(),
+                              category: categoryCtrl.text.trim(),
+                              categorySlug: categoryCtrl.text
+                                  .trim()
+                                  .toLowerCase()
+                                  .replaceAll(' ', '-'),
                               cover: coverCtrl.text.isEmpty
                                   ? "https://images.unsplash.com/photo-1589829085413-56de8ae18c73"
                                   : coverCtrl.text,
@@ -457,6 +458,10 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                               format: format,
                               language: language,
                               size: sizeCtrl.text,
+                              isPremium: isPremium,
+                              price: isPremium
+                                  ? (int.tryParse(priceCtrl.text) ?? 0)
+                                  : 0,
                             );
                             if (book == null) {
                               await _fb.addBook(newBook);
@@ -509,6 +514,74 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
           horizontal: 16,
           vertical: 14,
         ),
+      ),
+    );
+  }
+
+  void _generateCode(Book book) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.key_rounded, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Yangi kod yaratish', style: TextStyle(fontSize: 18)),
+          ],
+        ),
+        content: Text(
+          '"${book.title}" uchun o\'qish kodi yaratilsinmi?\nNarxi: ${book.price} so\'m',
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('BEKOR', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final code = await _fb.generateUnlockCode(book.id);
+              if (mounted) {
+                showDialog(
+                  context: context,
+                  builder: (ctx2) => AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    title: const Center(
+                      child: Text(
+                        'Maxfiy Kod',
+                        style: TextStyle(color: Colors.amber),
+                      ),
+                    ),
+                    content: SelectableText(
+                      code,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx2),
+                        child: const Text('YOPISH'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber.shade700,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('YARATISH'),
+          ),
+        ],
       ),
     );
   }
@@ -729,6 +802,10 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                                             ? const Color(0xFF8B5CF6)
                                             : const Color(0xFF10B981),
                                       ),
+                                      if (book.isPremium) ...[
+                                        const SizedBox(width: 6),
+                                        _chip('Premium', Colors.amber.shade700),
+                                      ],
                                     ],
                                   ),
                                 ],
@@ -742,6 +819,14 @@ class _AdminBooksTabState extends State<AdminBooksTab> {
                                   const Color(0xFF3B82F6),
                                   () => _showBookDialog(book),
                                 ),
+                                if (book.isPremium) ...[
+                                  const SizedBox(height: 4),
+                                  _actionButton(
+                                    Icons.key_rounded,
+                                    Colors.amber.shade700,
+                                    () => _generateCode(book),
+                                  ),
+                                ],
                                 const SizedBox(height: 4),
                                 _actionButton(
                                   Icons.delete_outline_rounded,

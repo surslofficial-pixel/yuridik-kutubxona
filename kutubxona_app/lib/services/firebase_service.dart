@@ -1,4 +1,8 @@
+import 'dart:io';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/book.dart';
 import '../models/category.dart';
@@ -314,5 +318,65 @@ class FirebaseService {
 
   Future<void> rejectSubmission(String submissionId) async {
     await _db.collection('book_submissions').doc(submissionId).delete();
+  }
+
+  // --- PREMIUM & STATS & UPLOAD ---
+
+  Future<void> incrementViewCount(String bookId) async {
+    try {
+      await _db.collection('books').doc(bookId).update({
+        'viewCount': FieldValue.increment(1),
+      });
+    } catch (e) {
+      debugPrint('Error incrementing view count: $e');
+    }
+  }
+
+  Future<String> generateUnlockCode(String bookId) async {
+    final code =
+        '${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}${Random().nextInt(9999).toString().padLeft(4, '0')}';
+    await _db.collection('unlock_codes').doc(code).set({
+      'code': code,
+      'bookId': bookId,
+      'used': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    return code;
+  }
+
+  Future<bool> verifyUnlockCode(String bookId, String code) async {
+    final doc = await _db.collection('unlock_codes').doc(code).get();
+    if (!doc.exists) return false;
+    final data = doc.data()!;
+    if (data['used'] == true || data['bookId'] != bookId) return false;
+
+    // Mark as used
+    await doc.reference.update({
+      'used': true,
+      'usedAt': FieldValue.serverTimestamp(),
+    });
+
+    // Save to SharedPreferences so it's unlocked persistently on this device
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('unlocked_$bookId', true);
+    return true;
+  }
+
+  Future<bool> isBookUnlockedLocally(String bookId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('unlocked_$bookId') ?? false;
+  }
+
+  Future<String?> uploadBookFile(File file, String folder) async {
+    try {
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
+      final ref = FirebaseStorage.instance.ref().child('$folder/$fileName');
+      final uploadTask = await ref.putFile(file);
+      return await uploadTask.ref.getDownloadURL();
+    } catch (e) {
+      debugPrint('Error uploading file: $e');
+      return null;
+    }
   }
 }

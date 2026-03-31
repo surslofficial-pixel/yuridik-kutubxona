@@ -26,6 +26,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   final _bookmarkService = BookmarkService();
   bool _isBookmarked = false;
   bool _hasRated = false;
+  bool _isUnlocked = false;
   int _selectedRating = 0;
 
   StreamSubscription? _catsSub;
@@ -39,6 +40,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
     super.initState();
     _checkBookmark();
     _checkIfRated();
+    _checkUnlocked();
     _catsSub = _firebase.categoriesStream.listen((cats) {
       if (mounted) setState(() => _categories = cats);
     });
@@ -59,7 +61,19 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
     if (mounted) setState(() => _isBookmarked = result);
   }
 
+  Future<void> _checkUnlocked() async {
+    final result = await _firebase.isBookUnlockedLocally(widget.bookId);
+    if (mounted) setState(() => _isUnlocked = result);
+  }
+
   void _openReader(Book book, bool isAudio) {
+    if (book.isPremium && !_isUnlocked) {
+      _showUnlockDialog(book);
+      return;
+    }
+
+    _firebase.incrementViewCount(book.id);
+
     showDialog(
       context: context,
       builder: (_) => ReaderFormDialog(
@@ -85,6 +99,107 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showUnlockDialog(Book book) {
+    final codeCtrl = TextEditingController();
+    bool isVerifying = false;
+    String? errorText;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setStateDialog) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.diamond_rounded, color: Colors.amber),
+              SizedBox(width: 8),
+              Text(
+                'Premium Kitob',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ushbu kitobni o\'qish uchun maxsus kod kiriting.\nNarxi: ${book.price} so\'m',
+                style: const TextStyle(fontSize: 14, height: 1.4),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: codeCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Maxfiy kod',
+                  errorText: errorText,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.lock),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('BEKOR', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: isVerifying
+                  ? null
+                  : () async {
+                      setStateDialog(() {
+                        isVerifying = true;
+                        errorText = null;
+                      });
+                      final success = await _firebase.verifyUnlockCode(
+                        book.id,
+                        codeCtrl.text.trim(),
+                      );
+                      setStateDialog(() => isVerifying = false);
+
+                      if (!context.mounted) return;
+
+                      if (success) {
+                        Navigator.pop(ctx);
+                        _checkUnlocked();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('✅ Kitob muvaffaqiyatli ochildi!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } else {
+                        setStateDialog(
+                          () => errorText = 'Kod xato yoki ishlatilgan',
+                        );
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryDark,
+                foregroundColor: Colors.white,
+              ),
+              child: isVerifying
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text('TASDIQLASH'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -261,12 +376,24 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                       child: ElevatedButton.icon(
                         onPressed: () => _openReader(book, isAudio),
                         icon: Icon(
-                          isAudio ? Icons.headphones : Icons.menu_book_outlined,
+                          book.isPremium && !_isUnlocked
+                              ? Icons.lock_rounded
+                              : (isAudio
+                                    ? Icons.headphones
+                                    : Icons.menu_book_outlined),
                           size: 18,
+                          color: Colors.white,
                         ),
-                        label: Text(isAudio ? 'Eshitish' : "O'qish"),
+                        label: Text(
+                          book.isPremium && !_isUnlocked
+                              ? 'Premium (${book.price} so\'m)'
+                              : (isAudio ? 'Eshitish' : "O'qish"),
+                          style: const TextStyle(color: Colors.white),
+                        ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isAudio
+                          backgroundColor: book.isPremium && !_isUnlocked
+                              ? Colors.amber.shade700
+                              : isAudio
                               ? const Color(0xFF7C3AED)
                               : AppTheme.primaryDark,
                           padding: const EdgeInsets.symmetric(vertical: 14),
