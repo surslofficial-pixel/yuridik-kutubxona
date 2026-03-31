@@ -46,6 +46,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Duration _ytPosition = Duration.zero;
   Duration _ytDuration = Duration.zero;
   Timer? _ytProgressTimer;
+  bool _hasPlayedOnce = false;
 
   // URLs
   String _previewUrl = '';
@@ -125,7 +126,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         videoId: _youtubeVideoId,
         autoPlay: false,
         params: const YoutubePlayerParams(
-          showControls: false,
+          showControls: true,
           showFullscreenButton: false,
           mute: false,
           playsInline: true,
@@ -135,6 +136,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         if (mounted) {
           setState(() {
             _ytPlaying = event.playerState == PlayerState.playing;
+            if (_ytPlaying) _hasPlayedOnce = true;
           });
         }
       });
@@ -250,6 +252,27 @@ class _ReaderScreenState extends State<ReaderScreen> {
             ''';
             ctrl.loadHtmlString(htmlContent);
           } else {
+            ctrl.setNavigationDelegate(
+              NavigationDelegate(
+                onPageFinished: (url) {
+                  // Enable pinch-to-zoom
+                  ctrl.runJavaScript(
+                    "document.querySelector('meta[name=\"viewport\"]')?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=5.0, user-scalable=yes');"
+                    // Hide Google Drive pop-out icons
+                    "const t = setInterval(function() {"
+                    "  const a = document.querySelector('.ndfHFb-c4YZDc-Wrql6b');"
+                    "  const b = document.querySelector('a[title=\"Pop-out\"]');"
+                    "  const c = document.querySelector('a[aria-label=\"Pop-out\"]');"
+                    "  if(a) a.style.display = 'none';"
+                    "  if(b) b.style.display = 'none';"
+                    "  if(c) c.style.display = 'none';"
+                    "  if(a || b || c) clearInterval(t);"
+                    "}, 500);"
+                    "setTimeout(() => clearInterval(t), 5000);", // safety timeout
+                  );
+                },
+              ),
+            );
             ctrl.loadRequest(
               Uri.parse(_previewUrl.isNotEmpty ? _previewUrl : 'about:blank'),
             );
@@ -448,55 +471,38 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   padding: const EdgeInsets.only(top: 32),
                   child: Column(
                     children: [
-                      // Cover image (with Hidden YouTube Player behind it)
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // HIDDEN YOUTUBE PLAYER (Must be >= 200x200 for YouTube API to work)
-                          SizedBox(
-                            width: 200,
-                            height: 200,
-                            child: Opacity(
-                              opacity: 0.01,
-                              child: YoutubePlayer(controller: _ytController!),
+                      // Cover image
+                      Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              blurRadius: 30,
+                              offset: const Offset(0, 15),
+                            ),
+                          ],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: CachedNetworkImage(
+                          imageUrl: widget.book.cover,
+                          fit: BoxFit.cover,
+                          placeholder: (c, url) => Container(
+                            color: const Color(0xFF1E293B),
+                            child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           ),
-                          // VISIBLE ALBUM COVER
-                          Container(
-                            width: 200,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.4),
-                                  blurRadius: 30,
-                                  offset: const Offset(0, 15),
-                                ),
-                              ],
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: CachedNetworkImage(
-                              imageUrl: widget.book.cover,
-                              fit: BoxFit.cover,
-                              placeholder: (c, url) => Container(
-                                color: const Color(0xFF1E293B),
-                                child: const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                              errorWidget: (c, url, error) => Container(
-                                color: Colors.grey[800],
-                                child: const Icon(
-                                  Icons.broken_image,
-                                  color: Colors.white54,
-                                ),
-                              ),
+                          errorWidget: (c, url, error) => Container(
+                            color: Colors.grey[800],
+                            child: const Icon(
+                              Icons.broken_image,
+                              color: Colors.white54,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                       const SizedBox(height: 18),
                       // Title
@@ -624,32 +630,57 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           );
                         },
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          if (_ytPlaying) {
-                            _ytController!.pauseVideo();
-                          } else {
-                            _ytController!.playVideo();
-                          }
-                        },
-                        child: Container(
+                      ClipRect(
+                        child: SizedBox(
                           width: 64,
                           height: 64,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.primaryBlue,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 10,
-                                offset: Offset(0, 4),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  if (_ytPlaying) {
+                                    _ytController!.pauseVideo();
+                                  } else {
+                                    _ytController!.playVideo();
+                                  }
+                                },
+                                child: Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: const BoxDecoration(
+                                    color: AppTheme.primaryBlue,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 10,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    _ytPlaying ? Icons.pause : Icons.play_arrow,
+                                    color: Colors.white,
+                                    size: 36,
+                                  ),
+                                ),
+                              ),
+                              // YouTube iframe capturing native tap
+                              IgnorePointer(
+                                ignoring: _hasPlayedOnce,
+                                child: OverflowBox(
+                                  maxWidth: 200,
+                                  maxHeight: 200,
+                                  child: Opacity(
+                                    opacity: 0.01,
+                                    child: YoutubePlayer(
+                                      controller: _ytController!,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ],
-                          ),
-                          child: Icon(
-                            _ytPlaying ? Icons.pause : Icons.play_arrow,
-                            color: Colors.white,
-                            size: 36,
                           ),
                         ),
                       ),
