@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../main.dart';
 import '../services/firebase_service.dart';
+import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -36,6 +37,9 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Track unique app installation counter across Firebase
     FirebaseService().logAppInstallation();
+
+    // Initialize Push Notifications and Ask Permission (Android 13+)
+    NotificationService().init();
 
     _controller = AnimationController(
       vsync: this,

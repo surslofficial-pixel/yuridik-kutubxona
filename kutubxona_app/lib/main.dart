@@ -15,6 +15,20 @@ import 'screens/ai_chat_screen.dart';
 import 'screens/about_screen.dart';
 import 'widgets/connectivity_banner.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: 'AIzaSyCM09hfTog_9LdnKxDjXpfOwyQpYlEHOaQ',
+      appId: '1:1029107483153:web:c9eca152e270f3dc6aa7b0',
+      messagingSenderId: '1029107483153',
+      projectId: 'surxondaryoyuridikkutubhonasi',
+      storageBucket: 'surxondaryoyuridikkutubhonasi.firebasestorage.app',
+    ),
+  );
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +41,9 @@ void main() async {
       storageBucket: 'surxondaryoyuridikkutubhonasi.firebasestorage.app',
     ),
   );
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
   // Clear old unlimited cache on first run of new version
   await DefaultCacheManager().emptyCache();
   runApp(const KutubxonaApp());
