@@ -13,6 +13,7 @@ import 'screens/catalog_screen.dart';
 import 'screens/ai_law_screen.dart';
 import 'screens/ai_chat_screen.dart';
 import 'screens/about_screen.dart';
+import 'screens/tabs/share_book_tab.dart';
 import 'widgets/connectivity_banner.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -242,6 +243,7 @@ class _MainShellState extends State<MainShell> {
     AiLawScreen(),
     AiChatScreen(),
     AboutScreen(),
+    ShareBookTab(),
   ];
 
   final _titles = const [
@@ -250,12 +252,13 @@ class _MainShellState extends State<MainShell> {
     'AI & Huquq',
     'AI Kutubxonachi',
     'Dastur haqida',
+    'Mualliflar',
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _currentIndex == 3
+      appBar: (_currentIndex == 3 || _currentIndex == 5)
           ? null
           : AppBar(title: Text(_titles[_currentIndex]), centerTitle: false),
       body: IndexedStack(index: _currentIndex, children: _pages),
@@ -310,6 +313,13 @@ class _MainShellState extends State<MainShell> {
                   LucideIcons.info,
                   'Haqida',
                   const Color(0xFF6366F1),
+                ),
+                _navItem(
+                  5,
+                  LucideIcons.penTool,
+                  LucideIcons.penTool,
+                  'Mualliflar',
+                  const Color(0xFF7C3AED),
                 ),
               ],
             ),

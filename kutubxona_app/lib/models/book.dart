@@ -44,6 +44,8 @@ class Book {
   final String? format;
   final String? language;
   final String? size;
+  final double rating;
+  final int ratingCount;
 
   Book({
     required this.id,
@@ -60,6 +62,8 @@ class Book {
     this.format,
     this.language,
     this.size,
+    this.rating = 0.0,
+    this.ratingCount = 0,
   });
 
   factory Book.fromMap(Map<String, dynamic> data) {
@@ -88,6 +92,8 @@ class Book {
       format: data['format'],
       language: data['language'],
       size: data['size'],
+      rating: (data['rating'] ?? 0.0).toDouble(),
+      ratingCount: data['ratingCount'] ?? 0,
     );
   }
 
@@ -108,6 +114,8 @@ class Book {
     if (format != null) map['format'] = format;
     if (language != null) map['language'] = language;
     if (size != null) map['size'] = size;
+    map['rating'] = rating;
+    map['ratingCount'] = ratingCount;
     return map;
   }
 }

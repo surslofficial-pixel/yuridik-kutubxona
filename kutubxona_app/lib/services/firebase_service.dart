@@ -235,4 +235,84 @@ class FirebaseService {
       .doc('app_info')
       .snapshots()
       .map((snap) => (snap.data()?['downloads_count'] as int?) ?? 0);
+
+  // === RATING SYSTEM ===
+  Future<bool> hasRatedBook(String bookId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('rated_$bookId') ?? false;
+    } catch (_) {
+      return false; // Safely allow if SharedPreferences fails
+    }
+  }
+
+  Future<void> rateBook(String bookId, int userRating) async {
+    if (await hasRatedBook(bookId)) return;
+
+    final docRef = _db.collection('books').doc(bookId);
+    await _db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      if (!snapshot.exists) return;
+
+      final data = snapshot.data()!;
+      final double currentRating = (data['rating'] ?? 0.0).toDouble();
+      final int currentCount = data['ratingCount'] ?? 0;
+
+      final double newRating =
+          ((currentRating * currentCount) + userRating) / (currentCount + 1);
+
+      transaction.update(docRef, {
+        'rating': newRating,
+        'ratingCount': currentCount + 1,
+      });
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('rated_$bookId', true);
+    } catch (_) {}
+  }
+
+  // === MUALLIFLAR (SUBMISSIONS) ===
+  Future<void> submitAuthorBook(Map<String, dynamic> data) async {
+    await _db.collection('book_submissions').add({
+      ...data,
+      'createdAt': FieldValue.serverTimestamp(),
+      'status': 'pending',
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> get pendingSubmissionsStream => _db
+      .collection('book_submissions')
+      .where('status', isEqualTo: 'pending')
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map(
+        (snap) => snap.docs.map((d) {
+          final data = d.data();
+          data['id'] = d.id;
+          return data;
+        }).toList(),
+      );
+
+  Future<void> approveSubmission(
+    String submissionId,
+    Map<String, dynamic> bookData,
+  ) async {
+    final batch = _db.batch();
+    final newBookRef = _db.collection('books').doc();
+    batch.set(newBookRef, {
+      ...bookData,
+      'id': newBookRef.id,
+      'createdAt': FieldValue.serverTimestamp(),
+      'rating': 0.0,
+      'ratingCount': 0,
+    });
+    batch.delete(_db.collection('book_submissions').doc(submissionId));
+    await batch.commit();
+  }
+
+  Future<void> rejectSubmission(String submissionId) async {
+    await _db.collection('book_submissions').doc(submissionId).delete();
+  }
 }

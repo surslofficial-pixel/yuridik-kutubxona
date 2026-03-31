@@ -25,6 +25,8 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   final _firebase = FirebaseService();
   final _bookmarkService = BookmarkService();
   bool _isBookmarked = false;
+  bool _hasRated = false;
+  int _selectedRating = 0;
 
   StreamSubscription? _catsSub;
   StreamSubscription? _booksSub;
@@ -36,6 +38,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   void initState() {
     super.initState();
     _checkBookmark();
+    _checkIfRated();
     _catsSub = _firebase.categoriesStream.listen((cats) {
       if (mounted) setState(() => _categories = cats);
     });
@@ -245,6 +248,10 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                     ),
                   ),
 
+                // Rating bar
+                const SizedBox(height: 16),
+                _buildRatingSection(book),
+
                 const SizedBox(height: 20),
 
                 // Action buttons
@@ -352,6 +359,120 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
               color: AppTheme.textPrimary,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _checkIfRated() async {
+    final rated = await _firebase.hasRatedBook(widget.bookId);
+    if (mounted) setState(() => _hasRated = rated);
+  }
+
+  Widget _buildRatingSection(Book book) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFDE68A)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.star_rounded,
+                color: Color(0xFFF59E0B),
+                size: 28,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                book.rating > 0 ? book.rating.toStringAsFixed(1) : '—',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF92400E),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '(${book.ratingCount} baho)',
+                style: const TextStyle(fontSize: 13, color: Color(0xFFB45309)),
+              ),
+              const Spacer(),
+              if (_hasRated)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        size: 14,
+                        color: Color(0xFF059669),
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Baholangan',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF059669),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          if (!_hasRated) ...[
+            const SizedBox(height: 12),
+            const Text(
+              'Bu kitobni baholang:',
+              style: TextStyle(fontSize: 13, color: Color(0xFF92400E)),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                final starIndex = index + 1;
+                return GestureDetector(
+                  onTap: () async {
+                    setState(() => _selectedRating = starIndex);
+                    await _firebase.rateBook(widget.bookId, starIndex);
+                    if (mounted) {
+                      setState(() => _hasRated = true);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Rahmat! Bahoyingiz qabul qilindi ⭐'),
+                          backgroundColor: Color(0xFF059669),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Icon(
+                      starIndex <= _selectedRating
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      color: const Color(0xFFF59E0B),
+                      size: 40,
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ],
         ],
       ),
     );

@@ -7,6 +7,7 @@ import 'tabs/admin_categories_tab.dart';
 import 'tabs/admin_books_tab.dart';
 import 'tabs/admin_ai_topics_tab.dart';
 import 'tabs/admin_users_tab.dart';
+import 'tabs/admin_submissions_tab.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -24,6 +25,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     const AdminBooksTab(),
     const AdminAiTopicsTab(),
     const AdminUsersTab(),
+    AdminSubmissionsTab(),
   ];
 
   final List<String> _tabTitles = [
@@ -32,6 +34,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     'Kitoblar',
     'AI Mavzulari',
     "O'quvchilar",
+    'Takliflar',
   ];
 
   final List<IconData> _tabIcons = [
@@ -40,6 +43,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     Icons.menu_book_rounded,
     Icons.smart_toy_rounded,
     Icons.people_rounded,
+    Icons.auto_stories_rounded,
   ];
 
   final List<IconData> _tabOutlineIcons = [
@@ -48,6 +52,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     Icons.menu_book_outlined,
     Icons.smart_toy_outlined,
     Icons.people_outlined,
+    Icons.auto_stories_outlined,
   ];
 
   Future<void> _logout() async {
@@ -149,7 +154,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: List.generate(5, (i) => _buildNavItem(i)),
+              children: List.generate(6, (i) => _buildNavItem(i)),
             ),
           ),
         ),
