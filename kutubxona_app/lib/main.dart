@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
@@ -26,6 +27,8 @@ void main() async {
       storageBucket: 'surxondaryoyuridikkutubhonasi.firebasestorage.app',
     ),
   );
+  // Clear old unlimited cache on first run of new version
+  await DefaultCacheManager().emptyCache();
   runApp(const KutubxonaApp());
 }
 

@@ -1,7 +1,7 @@
 name: kutubxona_app
 description: "Surxondaryo yuridik texnikumi kutubxonasi"
 publish_to: 'none'
-version: 1.2.5+25
+version: 1.2.6+26
 
 environment:
   sdk: ^3.11.3
@@ -33,6 +33,7 @@ dependencies:
   connectivity_plus: ^7.0.0
   lucide_icons: ^0.257.0
   youtube_player_iframe: ^5.2.2
+  flutter_cache_manager: ^3.4.1
 
 dev_dependencies:
   flutter_test:

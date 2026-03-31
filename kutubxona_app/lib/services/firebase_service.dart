@@ -57,13 +57,23 @@ class FirebaseService {
   List<Book>? _cachedBooks;
   List<AiTopic>? _cachedAiTopics;
 
-  /// Returns the cached broadcast stream directly.
-  /// Late subscribers get the latest value from Firestore's own caching.
-  Stream<List<Category>> get categoriesStream => _categoriesBroadcast;
+  /// Returns a stream that first yields the cached value (for late subscribers),
+  /// then forwards all future emissions from the shared broadcast stream.
+  /// This ensures screens navigated to AFTER initial data load still get data.
+  Stream<List<Category>> get categoriesStream async* {
+    if (_cachedCategories != null) yield _cachedCategories!;
+    yield* _categoriesBroadcast;
+  }
 
-  Stream<List<Book>> get booksStream => _booksBroadcast;
+  Stream<List<Book>> get booksStream async* {
+    if (_cachedBooks != null) yield _cachedBooks!;
+    yield* _booksBroadcast;
+  }
 
-  Stream<List<AiTopic>> get aiTopicsStream => _aiTopicsBroadcast;
+  Stream<List<AiTopic>> get aiTopicsStream async* {
+    if (_cachedAiTopics != null) yield _cachedAiTopics!;
+    yield* _aiTopicsBroadcast;
+  }
 
   // Direct cached access (synchronous, for widgets that already loaded data)
   List<Category> get cachedCategories => _cachedCategories ?? [];

@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../widgets/reader_form_dialog.dart';
 import '../widgets/smooth_page_route.dart';
 import '../widgets/base64_image.dart';
+import '../services/app_cache_manager.dart';
 import 'reader_screen.dart';
 
 class BookDetailsScreen extends StatefulWidget {
@@ -146,6 +147,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                         ),
                       )
                     : CachedNetworkImage(
+                        cacheManager: AppCacheManager.instance,
                         imageUrl: book.cover,
                         fit: BoxFit.cover,
                         errorWidget: (_, _, _) => Container(

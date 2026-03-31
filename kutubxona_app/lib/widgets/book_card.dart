@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/book.dart';
 import '../theme/app_theme.dart';
+import '../services/app_cache_manager.dart';
 import 'base64_image.dart';
 
 class BookCard extends StatelessWidget {
@@ -72,6 +73,7 @@ class BookCard extends StatelessWidget {
                             ),
                           )
                         : CachedNetworkImage(
+                            cacheManager: AppCacheManager.instance,
                             imageUrl: book.cover,
                             fit: BoxFit.cover,
                             placeholder: (_, _) => Container(
