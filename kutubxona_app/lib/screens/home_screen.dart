@@ -367,14 +367,12 @@ class _HomeScreenState extends State<HomeScreen>
           return BookCard(
             book: book,
             isAudio: bookIsAudio,
-            onTap: bookIsAudio
-                ? null
-                : () => Navigator.push(
-                    context,
-                    SmoothPageRoute(
-                      builder: (_) => BookDetailsScreen(bookId: book.id),
-                    ),
-                  ),
+            onTap: () => Navigator.push(
+              context,
+              SmoothPageRoute(
+                builder: (_) => BookDetailsScreen(bookId: book.id),
+              ),
+            ),
           );
         },
       ),

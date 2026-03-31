@@ -14,27 +14,24 @@ class FirebaseService {
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // === STREAMS (single shared subscription per collection) ===
-  late final Stream<List<Category>> categoriesStream = _db
+  // === STREAMS (new snapshot instance per listener to ensure cache hit) ===
+  Stream<List<Category>> get categoriesStream => _db
       .collection('categories')
       .snapshots()
-      .map((snap) => snap.docs.map((d) => Category.fromMap(d.data())).toList())
-      .asBroadcastStream();
+      .map((snap) => snap.docs.map((d) => Category.fromMap(d.data())).toList());
 
-  late final Stream<List<Book>> booksStream = _db
+  Stream<List<Book>> get booksStream => _db
       .collection('books')
       .snapshots()
-      .map((snap) => snap.docs.map((d) => Book.fromMap(d.data())).toList())
-      .asBroadcastStream();
+      .map((snap) => snap.docs.map((d) => Book.fromMap(d.data())).toList());
 
-  late final Stream<List<AiTopic>> aiTopicsStream = _db
+  Stream<List<AiTopic>> get aiTopicsStream => _db
       .collection('ai_topics')
       .snapshots()
       .map(
         (snap) =>
             snap.docs.map((d) => AiTopic.fromMap(d.id, d.data())).toList(),
-      )
-      .asBroadcastStream();
+      );
 
   // === READING SESSIONS ===
   Future<void> addReadingSession({
@@ -123,24 +120,20 @@ class FirebaseService {
   }
 
   // === ADMIN ANALYTICS ===
-  late final Stream<List<Map<String, dynamic>>> readingSessionsStream = _db
+  Stream<List<Map<String, dynamic>>> get readingSessionsStream => _db
       .collection('reading_sessions')
       .orderBy('timestamp', descending: true)
       .snapshots()
-      .map((snap) => snap.docs.map((d) => d.data()).toList())
-      .asBroadcastStream();
+      .map((snap) => snap.docs.map((d) => d.data()).toList());
 
-  late final Stream<List<Map<String, dynamic>>> activeReadersStreamAdmin = _db
-      .collection('active_readers')
-      .snapshots()
-      .map((snap) {
+  Stream<List<Map<String, dynamic>>> get activeReadersStreamAdmin =>
+      _db.collection('active_readers').snapshots().map((snap) {
         return snap.docs.map((d) {
           final data = d.data();
           data['id'] = d.id;
           return data;
         }).toList();
-      })
-      .asBroadcastStream();
+      });
 
   Future<void> deleteUserSessions(
     String firstName,

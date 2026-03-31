@@ -194,15 +194,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       return BookCard(
                         book: book,
                         isAudio: isAudio,
-                        onTap: isAudio
-                            ? null
-                            : () => Navigator.push(
-                                context,
-                                SmoothPageRoute(
-                                  builder: (_) =>
-                                      BookDetailsScreen(bookId: book.id),
-                                ),
-                              ),
+                        onTap: () => Navigator.push(
+                          context,
+                          SmoothPageRoute(
+                            builder: (_) => BookDetailsScreen(bookId: book.id),
+                          ),
+                        ),
                       );
                     }, childCount: filteredBooks.length),
                   ),
