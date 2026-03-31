@@ -125,7 +125,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         videoId: _youtubeVideoId,
         autoPlay: false,
         params: const YoutubePlayerParams(
-          showControls: true,
+          showControls: false,
           showFullscreenButton: false,
           mute: false,
           playsInline: true,
@@ -448,40 +448,57 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   padding: const EdgeInsets.only(top: 32),
                   child: Column(
                     children: [
-                      // Cover image
-                      Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.4),
-                              blurRadius: 30,
-                              offset: const Offset(0, 15),
-                            ),
-                          ],
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: CachedNetworkImage(
-                          imageUrl: widget.book.cover,
-                          fit: BoxFit.cover,
-                          placeholder: (c, url) => Container(
-                            color: const Color(0xFF1E293B),
-                            child: const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                      // Cover image (with Hidden YouTube Player behind it)
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // HIDDEN YOUTUBE PLAYER (Must be >= 200x200 for YouTube API to work)
+                          SizedBox(
+                            width: 200,
+                            height: 200,
+                            child: Opacity(
+                              opacity: 0.01,
+                              child: YoutubePlayer(controller: _ytController!),
                             ),
                           ),
-                          errorWidget: (c, url, error) => Container(
-                            color: Colors.grey[800],
-                            child: const Icon(
-                              Icons.broken_image,
-                              color: Colors.white54,
+                          // VISIBLE ALBUM COVER
+                          Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 15),
+                                ),
+                              ],
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: CachedNetworkImage(
+                              imageUrl: widget.book.cover,
+                              fit: BoxFit.cover,
+                              placeholder: (c, url) => Container(
+                                color: const Color(0xFF1E293B),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (c, url, error) => Container(
+                                color: Colors.grey[800],
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  color: Colors.white54,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 18),
                       // Title
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -505,18 +522,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.white.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // ── YouTube Player (VISIBLE with native controls) ──
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: YoutubePlayer(controller: _ytController!),
-                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
