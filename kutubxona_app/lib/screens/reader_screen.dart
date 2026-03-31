@@ -667,6 +667,35 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 24),
+                  if (_isYouTube)
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        // Open directly in native YouTube app
+                        final url = Uri.parse(
+                          'https://www.youtube.com/watch?v=$_youtubeVideoId',
+                        );
+                        launchUrl(url, mode: LaunchMode.externalApplication);
+                      },
+                      icon: const Icon(Icons.open_in_new, size: 16),
+                      label: const Text(
+                        "YouTube'da ochish (Agar xato bersa)",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white.withValues(alpha: 0.6),
+                        side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.15),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 12),
                 ],
               ),
