@@ -3,6 +3,9 @@ import '../models/book.dart';
 import '../models/category.dart';
 import '../models/ai_topic.dart';
 
+/// Singleton service that caches Firestore streams as broadcast streams.
+/// Every widget that calls [booksStream] etc. gets the SAME underlying
+/// Firestore snapshot listener, avoiding duplicate network connections.
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
 
@@ -10,28 +13,62 @@ class FirebaseService {
     return _instance;
   }
 
-  FirebaseService._internal();
+  FirebaseService._internal() {
+    // Initialize cached broadcast streams once, during singleton creation.
+    _categoriesBroadcast = _db
+        .collection('categories')
+        .snapshots()
+        .map(
+          (snap) => snap.docs.map((d) => Category.fromMap(d.data())).toList(),
+        )
+        .asBroadcastStream();
+
+    _booksBroadcast = _db
+        .collection('books')
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => Book.fromMap(d.data())).toList())
+        .asBroadcastStream();
+
+    _aiTopicsBroadcast = _db
+        .collection('ai_topics')
+        .snapshots()
+        .map(
+          (snap) =>
+              snap.docs.map((d) => AiTopic.fromMap(d.id, d.data())).toList(),
+        )
+        .asBroadcastStream();
+
+    // Keep a local cache of the latest values so new subscribers
+    // can get data immediately without waiting for the next Firestore emit.
+    _categoriesBroadcast.listen((cats) => _cachedCategories = cats);
+    _booksBroadcast.listen((books) => _cachedBooks = books);
+    _aiTopicsBroadcast.listen((topics) => _cachedAiTopics = topics);
+  }
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // === STREAMS (new snapshot instance per listener to ensure cache hit) ===
-  Stream<List<Category>> get categoriesStream => _db
-      .collection('categories')
-      .snapshots()
-      .map((snap) => snap.docs.map((d) => Category.fromMap(d.data())).toList());
+  // Cached broadcast streams — single Firestore listener per collection
+  late final Stream<List<Category>> _categoriesBroadcast;
+  late final Stream<List<Book>> _booksBroadcast;
+  late final Stream<List<AiTopic>> _aiTopicsBroadcast;
 
-  Stream<List<Book>> get booksStream => _db
-      .collection('books')
-      .snapshots()
-      .map((snap) => snap.docs.map((d) => Book.fromMap(d.data())).toList());
+  // In-memory latest value cache
+  List<Category>? _cachedCategories;
+  List<Book>? _cachedBooks;
+  List<AiTopic>? _cachedAiTopics;
 
-  Stream<List<AiTopic>> get aiTopicsStream => _db
-      .collection('ai_topics')
-      .snapshots()
-      .map(
-        (snap) =>
-            snap.docs.map((d) => AiTopic.fromMap(d.id, d.data())).toList(),
-      );
+  /// Returns the cached broadcast stream directly.
+  /// Late subscribers get the latest value from Firestore's own caching.
+  Stream<List<Category>> get categoriesStream => _categoriesBroadcast;
+
+  Stream<List<Book>> get booksStream => _booksBroadcast;
+
+  Stream<List<AiTopic>> get aiTopicsStream => _aiTopicsBroadcast;
+
+  // Direct cached access (synchronous, for widgets that already loaded data)
+  List<Category> get cachedCategories => _cachedCategories ?? [];
+  List<Book> get cachedBooks => _cachedBooks ?? [];
+  List<AiTopic> get cachedAiTopics => _cachedAiTopics ?? [];
 
   // === READING SESSIONS ===
   Future<void> addReadingSession({

@@ -41,49 +41,39 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        top: false,
-        bottom: false,
-        child: Stack(
-          children: [
-            widget.child,
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              top: _hasInternet ? -50 : 0,
-              left: 0,
-              right: 0,
-              height: 40,
-              child: SafeArea(
-                bottom: false,
-                child: Container(
-                  color: Colors.red.shade600,
-                  alignment: Alignment.center,
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.wifi_off_rounded,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        "Internet ulanishi yo'q",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+    return Stack(
+      children: [
+        widget.child,
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          top: _hasInternet ? -50 : 0,
+          left: 0,
+          right: 0,
+          height: 40,
+          child: SafeArea(
+            bottom: false,
+            child: Container(
+              color: Colors.red.shade600,
+              alignment: Alignment.center,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.wifi_off_rounded, color: Colors.white, size: 16),
+                  SizedBox(width: 8),
+                  Text(
+                    "Internet ulanishi yo'q",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

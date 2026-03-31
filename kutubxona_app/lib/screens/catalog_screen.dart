@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/book.dart';
 import '../models/category.dart';
@@ -21,18 +22,38 @@ class _CatalogScreenState extends State<CatalogScreen> {
   String _searchQuery = '';
   String? _selectedCategory;
 
+  StreamSubscription? _catsSub;
+  StreamSubscription? _booksSub;
+
   List<Category> _categories = [];
   List<Book> _books = [];
+  Map<String, int> _bookCountBySlug = {};
 
   @override
   void initState() {
     super.initState();
-    _firebase.categoriesStream.listen((cats) {
+    _catsSub = _firebase.categoriesStream.listen((cats) {
       if (mounted) setState(() => _categories = cats);
     });
-    _firebase.booksStream.listen((books) {
-      if (mounted) setState(() => _books = books);
+    _booksSub = _firebase.booksStream.listen((books) {
+      if (mounted) {
+        final countMap = <String, int>{};
+        for (final b in books) {
+          countMap[b.categorySlug] = (countMap[b.categorySlug] ?? 0) + 1;
+        }
+        setState(() {
+          _books = books;
+          _bookCountBySlug = countMap;
+        });
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _catsSub?.cancel();
+    _booksSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -293,9 +314,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
               separatorBuilder: (_, _) => const SizedBox(width: 10),
               itemBuilder: (context, i) {
                 final cat = cats[i];
-                final count = allBooks
-                    .where((b) => b.categorySlug == cat.slug)
-                    .length;
+                final count = _bookCountBySlug[cat.slug] ?? 0;
                 return SizedBox(
                   width: 110,
                   child: CategoryCard(

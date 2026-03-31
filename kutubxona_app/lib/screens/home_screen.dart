@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/book.dart';
 import '../models/category.dart';
@@ -23,8 +24,23 @@ class _HomeScreenState extends State<HomeScreen>
     with AutomaticKeepAliveClientMixin {
   final _firebase = FirebaseService();
 
+  // Proper subscription tracking for memory leak prevention
+  StreamSubscription? _catsSub;
+  StreamSubscription? _booksSub;
+
   List<Category> _categories = [];
   List<Book> _books = [];
+
+  // Pre-computed data (avoid recomputing in build())
+  Map<String, int> _bookCountBySlug = {};
+  List<Category> _mainCats = [];
+  List<Category> _umumtalimCats = [];
+  List<Category> _badiiyCats = [];
+  List<Category> _audioCats = [];
+  List<Book> _badiiyBooks = [];
+  List<Book> _audioBooks = [];
+  List<Book> _recentFour = [];
+
   bool get _isLoading => _categories.isEmpty && _books.isEmpty;
 
   @override
@@ -33,12 +49,73 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _firebase.categoriesStream.listen((cats) {
-      if (mounted) setState(() => _categories = cats);
+    _catsSub = _firebase.categoriesStream.listen((cats) {
+      if (mounted) {
+        _categories = cats;
+        _recompute();
+      }
     });
-    _firebase.booksStream.listen((books) {
-      if (mounted) setState(() => _books = books);
+    _booksSub = _firebase.booksStream.listen((books) {
+      if (mounted) {
+        _books = books;
+        _recompute();
+      }
     });
+  }
+
+  /// Pre-compute all derived lists ONCE per data change, not per build().
+  void _recompute() {
+    final categories = _categories;
+    final books = _books;
+
+    // Book count cache
+    final countMap = <String, int>{};
+    for (final b in books) {
+      countMap[b.categorySlug] = (countMap[b.categorySlug] ?? 0) + 1;
+    }
+    _bookCountBySlug = countMap;
+
+    // Category groups
+    _mainCats = categories.where((c) => c.group == 'maxsus').toList();
+    _umumtalimCats = categories.where((c) => c.group == 'umumtalim').toList();
+    _badiiyCats = categories.where((c) => c.group == 'badiiy').toList();
+    _audioCats = categories.where((c) => c.group == 'audio').toList();
+
+    // Badiiy books
+    final badiiySlugs = _badiiyCats.map((c) => c.slug).toSet();
+    _badiiyBooks = books
+        .where((b) => badiiySlugs.contains(b.categorySlug))
+        .take(4)
+        .toList();
+
+    // Audio books
+    final audioSlugs = _audioCats.map((c) => c.slug).toSet();
+    _audioBooks = books
+        .where((b) => audioSlugs.contains(b.categorySlug))
+        .take(4)
+        .toList();
+
+    // Recent books (sorted once, not in build)
+    final sorted = List<Book>.from(books)
+      ..sort((a, b) {
+        final da = a.date != null
+            ? DateTime.tryParse(a.date!)?.millisecondsSinceEpoch ?? 0
+            : 0;
+        final db = b.date != null
+            ? DateTime.tryParse(b.date!)?.millisecondsSinceEpoch ?? 0
+            : 0;
+        return db.compareTo(da);
+      });
+    _recentFour = sorted.take(4).toList();
+
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _catsSub?.cancel();
+    _booksSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -46,10 +123,10 @@ class _HomeScreenState extends State<HomeScreen>
     super.build(context);
 
     if (_isLoading) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             CircularProgressIndicator(color: AppTheme.primaryDark),
             SizedBox(height: 16),
             Text(
@@ -65,40 +142,6 @@ class _HomeScreenState extends State<HomeScreen>
       );
     }
 
-    final categories = _categories;
-    final books = _books;
-
-    final mainCats = categories.where((c) => c.group == 'maxsus').toList();
-    final umumtalimCats = categories
-        .where((c) => c.group == 'umumtalim')
-        .toList();
-    final badiiyCats = categories.where((c) => c.group == 'badiiy').toList();
-    final audioCats = categories.where((c) => c.group == 'audio').toList();
-
-    final badiiySlugs = badiiyCats.map((c) => c.slug).toSet();
-    final badiiyBooks = books
-        .where((b) => badiiySlugs.contains(b.categorySlug))
-        .take(4)
-        .toList();
-
-    final audioSlugs = audioCats.map((c) => c.slug).toSet();
-    final audioBooks = books
-        .where((b) => audioSlugs.contains(b.categorySlug))
-        .take(4)
-        .toList();
-
-    final recentBooks = List<Book>.from(books)
-      ..sort((a, b) {
-        final da = a.date != null
-            ? DateTime.tryParse(a.date!)?.millisecondsSinceEpoch ?? 0
-            : 0;
-        final db = b.date != null
-            ? DateTime.tryParse(b.date!)?.millisecondsSinceEpoch ?? 0
-            : 0;
-        return db.compareTo(da);
-      });
-    final recentFour = recentBooks.take(4).toList();
-
     return RefreshIndicator(
       color: AppTheme.primaryBlue,
       backgroundColor: Colors.white,
@@ -111,61 +154,61 @@ class _HomeScreenState extends State<HomeScreen>
           _buildHero(context),
           const SizedBox(height: 24),
 
-          if (mainCats.isNotEmpty) ...[
+          if (_mainCats.isNotEmpty) ...[
             _sectionHeader(
               context,
               'Maxsus fanlar darsliklari',
               onSeeAll: () => _openCatalog(context),
             ),
-            _buildCategoryGrid(context, mainCats, books),
+            _buildCategoryGrid(context, _mainCats),
             const SizedBox(height: 24),
           ],
 
-          if (umumtalimCats.isNotEmpty) ...[
+          if (_umumtalimCats.isNotEmpty) ...[
             _sectionHeader(context, "Umumta'lim fanlari"),
-            _buildCategoryGrid(context, umumtalimCats, books),
+            _buildCategoryGrid(context, _umumtalimCats),
             const SizedBox(height: 24),
           ],
 
-          if (badiiyCats.isNotEmpty) ...[
+          if (_badiiyCats.isNotEmpty) ...[
             _sectionHeader(context, 'Badiiy adabiyotlar'),
-            _buildCategoryGrid(context, badiiyCats, books),
+            _buildCategoryGrid(context, _badiiyCats),
             const SizedBox(height: 24),
           ],
 
-          if (audioCats.isNotEmpty) ...[
+          if (_audioCats.isNotEmpty) ...[
             _sectionHeader(context, 'Audio Darslik'),
-            _buildCategoryGrid(context, audioCats, books),
+            _buildCategoryGrid(context, _audioCats),
             const SizedBox(height: 24),
           ],
 
-          if (badiiyBooks.isNotEmpty) ...[
+          if (_badiiyBooks.isNotEmpty) ...[
             _sectionHeader(
               context,
               'Badiiy kitoblar',
               onSeeAll: () => _openCatalog(context),
             ),
-            _buildBookGrid(context, badiiyBooks, categories),
+            _buildBookGrid(context, _badiiyBooks),
             const SizedBox(height: 24),
           ],
 
-          if (audioBooks.isNotEmpty) ...[
+          if (_audioBooks.isNotEmpty) ...[
             _sectionHeader(
               context,
               '🎵 Audio Darslik',
               onSeeAll: () => _openCatalog(context),
             ),
-            _buildBookGrid(context, audioBooks, categories, isAudio: true),
+            _buildBookGrid(context, _audioBooks, isAudio: true),
             const SizedBox(height: 24),
           ],
 
-          if (recentFour.isNotEmpty) ...[
+          if (_recentFour.isNotEmpty) ...[
             _sectionHeader(
               context,
               "Yangi qo'shilgan kitoblar",
               onSeeAll: () => _openCatalog(context),
             ),
-            _buildBookGrid(context, recentFour, categories),
+            _buildBookGrid(context, _recentFour),
           ],
         ],
       ),
@@ -296,11 +339,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildCategoryGrid(
-    BuildContext context,
-    List<Category> cats,
-    List<Book> allBooks,
-  ) {
+  Widget _buildCategoryGrid(BuildContext context, List<Category> cats) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GridView.builder(
@@ -315,9 +354,8 @@ class _HomeScreenState extends State<HomeScreen>
         itemCount: cats.length,
         itemBuilder: (context, i) {
           final cat = cats[i];
-          final count = allBooks
-              .where((b) => b.categorySlug == cat.slug)
-              .length;
+          // Use pre-computed book count map instead of O(n) scan
+          final count = _bookCountBySlug[cat.slug] ?? 0;
           return CategoryCard(
             name: cat.name,
             iconName: cat.iconName,
@@ -338,8 +376,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildBookGrid(
     BuildContext context,
-    List<Book> books,
-    List<Category> categories, {
+    List<Book> books, {
     bool isAudio = false,
   }) {
     final displayBooks = books.take(4).toList();
@@ -359,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen>
         itemCount: displayBooks.length,
         itemBuilder: (context, i) {
           final book = displayBooks[i];
-          final catGroup = categories
+          final catGroup = _categories
               .where((c) => c.slug == book.categorySlug)
               .firstOrNull
               ?.group;

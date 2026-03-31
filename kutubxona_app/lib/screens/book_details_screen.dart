@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/book.dart';
@@ -24,6 +25,9 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   final _bookmarkService = BookmarkService();
   bool _isBookmarked = false;
 
+  StreamSubscription? _catsSub;
+  StreamSubscription? _booksSub;
+
   List<Category> _categories = [];
   List<Book> _books = [];
 
@@ -31,12 +35,19 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   void initState() {
     super.initState();
     _checkBookmark();
-    _firebase.categoriesStream.listen((cats) {
+    _catsSub = _firebase.categoriesStream.listen((cats) {
       if (mounted) setState(() => _categories = cats);
     });
-    _firebase.booksStream.listen((books) {
+    _booksSub = _firebase.booksStream.listen((books) {
       if (mounted) setState(() => _books = books);
     });
+  }
+
+  @override
+  void dispose() {
+    _catsSub?.cancel();
+    _booksSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkBookmark() async {

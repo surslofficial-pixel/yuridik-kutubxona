@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/book.dart';
 import '../models/category.dart';
@@ -23,18 +24,27 @@ class CategoryScreen extends StatefulWidget {
 
 class _CategoryScreenState extends State<CategoryScreen> {
   final _firebase = FirebaseService();
+  StreamSubscription? _catsSub;
+  StreamSubscription? _booksSub;
   List<Category> _categories = [];
   List<Book> _allBooks = [];
 
   @override
   void initState() {
     super.initState();
-    _firebase.categoriesStream.listen((cats) {
+    _catsSub = _firebase.categoriesStream.listen((cats) {
       if (mounted) setState(() => _categories = cats);
     });
-    _firebase.booksStream.listen((books) {
+    _booksSub = _firebase.booksStream.listen((books) {
       if (mounted) setState(() => _allBooks = books);
     });
+  }
+
+  @override
+  void dispose() {
+    _catsSub?.cancel();
+    _booksSub?.cancel();
+    super.dispose();
   }
 
   @override
