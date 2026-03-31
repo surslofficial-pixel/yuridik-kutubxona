@@ -123,9 +123,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (_isYouTube) {
       _ytController = YoutubePlayerController.fromVideoId(
         videoId: _youtubeVideoId,
-        autoPlay: true,
+        autoPlay: false,
         params: const YoutubePlayerParams(
-          showControls: false,
+          showControls: true,
           showFullscreenButton: false,
           mute: false,
           playsInline: true,
@@ -427,237 +427,248 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (_ytController == null) return const SizedBox.shrink();
     String fmt(Duration d) =>
         '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
-    return Stack(
-      children: [
-        // Custom Audio-only UI
-        Positioned.fill(
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF0C1E18), Color(0xFF091118)],
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0C1E18), Color(0xFF091118)],
+        ),
+      ),
+      child: SafeArea(
+        bottom: true,
+        top: false,
+        child: Column(
+          children: [
+            // ── Album art + YouTube player ──
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 32),
+                  child: Column(
+                    children: [
+                      // Cover image
+                      Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              blurRadius: 30,
+                              offset: const Offset(0, 15),
+                            ),
+                          ],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: CachedNetworkImage(
+                          imageUrl: widget.book.cover,
+                          fit: BoxFit.cover,
+                          placeholder: (c, url) => Container(
+                            color: const Color(0xFF1E293B),
+                            child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          errorWidget: (c, url, error) => Container(
+                            color: Colors.grey[800],
+                            child: const Icon(
+                              Icons.broken_image,
+                              color: Colors.white54,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      // Title
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          widget.book.title,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.book.author.isNotEmpty
+                            ? widget.book.author
+                            : 'Audio darslik',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // ── YouTube Player (VISIBLE with native controls) ──
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: YoutubePlayer(controller: _ytController!),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          _ytPlaying
+                              ? 'Eshitilmoqda...'
+                              : 'Yuqoridagi ▶ tugmani bosing',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _ytPlaying
+                                ? const Color(0xFF10B981)
+                                : Colors.white.withValues(alpha: 0.5),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            child: SafeArea(
-              bottom: true,
-              top: false,
+            // ── Custom seek controls ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: Column(
                 children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 64),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 170,
-                            height: 170,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.4),
-                                  blurRadius: 30,
-                                  offset: const Offset(0, 15),
-                                ),
-                              ],
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: CachedNetworkImage(
-                              imageUrl: widget.book.cover,
-                              fit: BoxFit.cover,
-                              placeholder: (c, url) => Container(
-                                color: const Color(0xFF1E293B),
-                                child: const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                              errorWidget: (c, url, error) => Container(
-                                color: Colors.grey[800],
-                                child: const Icon(
-                                  Icons.broken_image,
-                                  color: Colors.white54,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Text(
-                              widget.book.title,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.book.author.isNotEmpty
-                                ? widget.book.author
-                                : "Audio darslik",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.6),
-                            ),
-                          ),
-                        ],
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 4,
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 8,
+                      ),
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 16,
+                      ),
+                      activeTrackColor: AppTheme.primaryBlue,
+                      inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+                      thumbColor: Colors.white,
+                    ),
+                    child: Slider(
+                      value: _ytPosition.inSeconds.toDouble().clamp(
+                        0,
+                        _ytDuration.inSeconds > 0
+                            ? _ytDuration.inSeconds.toDouble()
+                            : 1,
+                      ),
+                      min: 0,
+                      max: _ytDuration.inSeconds > 0
+                          ? _ytDuration.inSeconds.toDouble()
+                          : 1,
+                      onChanged: (val) => _ytController!.seekTo(
+                        seconds: val,
+                        allowSeekAhead: true,
                       ),
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
-                    ),
-                    child: Column(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            trackHeight: 4,
-                            thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 8,
-                            ),
-                            overlayShape: const RoundSliderOverlayShape(
-                              overlayRadius: 16,
-                            ),
-                            activeTrackColor: AppTheme.primaryBlue,
-                            inactiveTrackColor: Colors.white.withValues(
-                              alpha: 0.2,
-                            ),
-                            thumbColor: Colors.white,
-                          ),
-                          child: Slider(
-                            value: _ytPosition.inSeconds.toDouble().clamp(
-                              0,
-                              _ytDuration.inSeconds > 0
-                                  ? _ytDuration.inSeconds.toDouble()
-                                  : 1,
-                            ),
-                            min: 0,
-                            max: _ytDuration.inSeconds > 0
-                                ? _ytDuration.inSeconds.toDouble()
-                                : 1,
-                            onChanged: (val) => _ytController!.seekTo(
-                              seconds: val,
-                              allowSeekAhead: true,
-                            ),
+                        Text(
+                          fmt(_ytPosition),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 12,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                fmt(_ytPosition),
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  fontSize: 12,
-                                ),
-                              ),
-                              Text(
-                                fmt(_ytDuration),
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
+                        Text(
+                          fmt(_ytDuration),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 12,
                           ),
                         ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.shuffle),
-                              color: Colors.white.withValues(alpha: 0.5),
-                              iconSize: 24,
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.skip_previous),
-                              color: Colors.white,
-                              iconSize: 36,
-                              onPressed: () {
-                                if (_ytPosition > const Duration(seconds: 5)) {
-                                  _ytController!.seekTo(
-                                    seconds: 0,
-                                    allowSeekAhead: true,
-                                  );
-                                }
-                              },
-                            ),
-                            Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  width: 72,
-                                  height: 72,
-                                  decoration: const BoxDecoration(
-                                    color: AppTheme.primaryBlue,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black26,
-                                        blurRadius: 10,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    _ytPlaying ? Icons.pause : Icons.play_arrow,
-                                    color: Colors.white,
-                                    size: 42,
-                                  ),
-                                ),
-                                // Invisible YouTube iframe intercepts the native tap
-                                // to allow playback on strict mobile webviews!
-                                SizedBox(
-                                  width: 72,
-                                  height: 72,
-                                  child: Opacity(
-                                    opacity: 0.01,
-                                    child: YoutubePlayer(
-                                      controller: _ytController!,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.skip_next),
-                              color: Colors.white,
-                              iconSize: 36,
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.repeat),
-                              color: Colors.white.withValues(alpha: 0.5),
-                              iconSize: 24,
-                              onPressed: () {},
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.shuffle),
+                        color: Colors.white.withValues(alpha: 0.5),
+                        iconSize: 24,
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.skip_previous),
+                        color: Colors.white,
+                        iconSize: 36,
+                        onPressed: () {
+                          _ytController!.seekTo(
+                            seconds: 0,
+                            allowSeekAhead: true,
+                          );
+                        },
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          if (_ytPlaying) {
+                            _ytController!.pauseVideo();
+                          } else {
+                            _ytController!.playVideo();
+                          }
+                        },
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primaryBlue,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            _ytPlaying ? Icons.pause : Icons.play_arrow,
+                            color: Colors.white,
+                            size: 36,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.skip_next),
+                        color: Colors.white,
+                        iconSize: 36,
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.repeat),
+                        color: Colors.white.withValues(alpha: 0.5),
+                        iconSize: 24,
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
